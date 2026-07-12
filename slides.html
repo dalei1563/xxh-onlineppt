@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026年7月线下学习会 - AI主持演示</title>
+    <style>
+        /* ==================== 全局样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: 'GSPOldStyle';
+            src: local('GSPOldStyle'), local('SimSun');
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', sans-serif;
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ==================== 幻灯片容器 ==================== */
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            overflow: hidden;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        /* ==================== 通用组件 ==================== */
+        .gsp-logo {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 36px;
+            font-weight: bold;
+            color: #003366;
+            letter-spacing: 2px;
+        }
+
+        .gsp-logo-white {
+            color: white;
+        }
+
+        .gsp-logo img {
+            height: 40px;
+        }
+
+        .page-indicator {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            writing-mode: vertical-rl;
+            color: #003366;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-indicator::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #003366;
+        }
+
+        .page-indicator-white {
+            color: white;
+        }
+
+        .page-indicator-white::after {
+            background: white;
+        }
+
+        .website-url {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .website-url-white {
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* ==================== 幻灯片1: 视频开场 ==================== */
+        .slide-01 {
+            background: #000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .slide-01 video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        .slide-01 .skip-btn {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .slide-01 .skip-btn:hover {
+            background: rgba(0,0,0,0.7);
+        }
+
+        /* ==================== 幻灯片1b: 座位安排 ==================== */
+        .slide-01b {
+            background: white;
+            flex-direction: column;
+        }
+
+        .slide-01b .header-bar {
+            background: #003366;
+            color: white;
+            padding: 20px 40px;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .slide-01b .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .slide-01b .podium {
+            background: #f0f0f0;
+            padding: 20px 200px;
+            border-radius: 8px;
+            font-size: 36px;
+            color: #003366;
+            font-weight: bold;
+            margin-bottom: 60px;
+        }
+
+        .slide-01b .seating-area {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 800px;
+        }
+
+        .slide-01b .seat {
+            width: 120px;
+            height: 60px;
+            border: 2px solid #003366;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #003366;
+            font-size: 14px;
+        }
+
+        /* ==================== 幻灯片2: 签到码 ==================== */
+        .slide-02 {
+            background: white;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .slide-02 .title {
+            font-size: 56px;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .slide-02 .subtitle {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 60px;
+        }
+
+        .slide-02 .qr-placeholder {
+            width: 300px;
+            height: 300px;
+            border: 3px dashed #ccc;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 18px;
+        }
+
+        /* ==================== 幻灯片3: 主页 ==================== */
+        .slide-03 {
+            background: linear-gradient(135deg, #003366 0%, #004d99 50%, #1a53a5 100%);
+            flex-direction: row;
+        }
+
+        .slide-03 .left-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .slide-03 .main-title {
+            font-size: 64px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 30px;
+            line-height: 1.3;
+        }
+
+        .slide-03 .date {
+            font-size: 28px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .slide-03 .right-section {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-03 .car-images {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('ppt_images/slide_03.png') center/cover;
+            opacity: 0.6;
+        }
+
+        .slide-03 .wave-overlay {
+            position: absolute;
+            top: 0;
+            left: -100px;
+            width: 200px;
+            height: 100%;
+            background: linear-gradient(135deg, #003366 0%, transparent 100%);
+            clip-path: polygon(0 0, 100% 0, 60% 100%, 0 100%);
+        }
+
+        /* ==================== 幻灯片5: 纪律 ==================== */
+        .slide-05 {
+            background: linear-gradient(180deg, #0a1628 0%, #1a2d4a 100%);
+            flex-direction: column;
+            padding: 50px 80px;
+        }
+
+        .slide-05 .section-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .slide-05 .section-number {
+            background: white;
+            color: #003366;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .slide-05 .section-title {
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .slide-05 .rules-content {
+            flex: 1;
+            display: flex;
+            gap: 40px;
+        }
+
+        .slide-05 .rules-text {
+            flex: 2;
+            color: white;
+            font-size: 20px;
+            line-height: 2;
+        }
+
+        .slide-05 .rules-text .highlight {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .slide-05 .warning-cards {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .slide-05 .warning-card {
+            padding: 30px;
+            border-radius: 16px;
+            color: white;
+            text-align: center;
+        }
+
+        .slide-05 .warning-card.yellow {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .slide-05 .warning-card.red {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .slide-05 .card-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .slide-05 .card-desc {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        /* ==================== 幻灯片15: 排行榜 ==================== */
+        .slide-15 {
+            background: white;
+            flex-direction: column;
+            padding: 60px 80px;
+        }
+
+        .slide-15 .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 60px;
+        }
+
+        .slide-15 .ranking-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .slide-15 .ranking-item {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            padding: 25px 40px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .slide-15 .rank-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .slide-15 .rank-number.gold {
+            background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+        }
+
+        .slide-15 .rank-number.silver {
+            background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
+        }
+
+        .slide-15 .rank-number.bronze {
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+        }
+
+        .slide-15 .rank-name {
+            font-size: 28px;
+            color: #333;
+            flex: 1;
+        }
+
+        .slide-15 .rank-score {
+            font-size: 24px;
+            color: #003366;
+            font-weight: bold;
+        }
+
+        /* ==================== 幻灯片20: 章节页 ==================== */
+        .slide-20 {
+            background: linear-gradient(135deg, #003366 0%, #004d99 100%);
+            flex-direction: row;
+            position: relative;
+        }
+
+        .slide-20 .content-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px;
+            z-index: 2;
+        }
+
+        .slide-20 .chapter-number {
+            font-size: 120px;
+            font-weight: bold;
+            color: white;
+            line-height: 1;
+            margin-bottom: 30px;
+        }
+
+        .slide-20 .chapter-title {
+            font-size: 42px;
+            font-weight: bold;
+            color: white;
+            line-height: 1.4;
+        }
+
+        .slide-20 .chapter-subtitle {
+            font-size: 28px;
+            color: rgba(255,255,255,0.8);
+            margin-top: 20px;
+        }
+
+        .slide-20 .image-section {
+            flex: 1;
+            position: relative;
+        }
+
+        .slide-20 .car-image {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: url('ppt_images/slide_20.png') center/cover;
+        }
+
+        .slide-20 .diagonal-cut {
+            position: absolute;
+            top: 0;
+            left: -150px;
+            width: 300px;
+            height: 100%;
+            background: white;
+            transform: skewX(-15deg);
+        }
+
+        /* ==================== 幻灯片30: 问答题 ==================== */
+        .slide-30 {
+            background: white;
+            flex-direction: column;
+            padding: 50px 80px;
+        }
+
+        .slide-30 .quiz-header {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .slide-30 .quiz-section {
+            font-size: 32px;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 40px;
+        }
+
+        .slide-30 .question {
+            font-size: 36px;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        .slide-30 .options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .slide-30 .option {
+            font-size: 30px;
+            color: #333;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .slide-30 .answer {
+            margin-top: 40px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #003366;
+        }
+
+        /* ==================== 幻灯片66: 结束页 ==================== */
+        .slide-66 {
+            background: linear-gradient(135deg, #003366 0%, #004d99 50%, #1a53a5 100%);
+            flex-direction: column;
+            position: relative;
+        }
+
+        .slide-66 .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('ppt_images/slide_66.png') center/cover;
+            opacity: 0.4;
+        }
+
+        .slide-66 .content {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px;
+        }
+
+        .slide-66 .thanks-text {
+            font-size: 120px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .slide-66 .company-name {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .slide-66 .contact-info {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            line-height: 2;
+        }
+
+        .slide-66 .social-links {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .slide-66 .social-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slide-66 .social-icon {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .slide-66 .social-label {
+            color: white;
+            font-size: 14px;
+        }
+
+        /* ==================== 通用模板样式 ==================== */
+        .template-white {
+            background: white;
+            flex-direction: column;
+            padding: 60px 80px;
+        }
+
+        .template-white .title {
+            font-size: 42px;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 40px;
+        }
+
+        .template-white .content {
+            flex: 1;
+            font-size: 24px;
+            color: #333;
+            line-height: 1.8;
+        }
+
+        .template-blue {
+            background: linear-gradient(135deg, #003366 0%, #004d99 100%);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px;
+        }
+
+        .template-blue .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+
+        .template-blue .subtitle {
+            font-size: 28px;
+            color: rgba(255,255,255,0.8);
+            margin-top: 30px;
+        }
+
+        /* ==================== 导航控制栏 ==================== */
+        .control-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #003366 0%, #004080 100%);
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            transform: translateY(100%);
+        }
+
+        .control-bar.visible {
+            transform: translateY(0);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            color: white;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-input {
+            width: 50px;
+            padding: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 999;
+            transition: bottom 0.3s ease;
+        }
+
+        .progress-bar.visible {
+            bottom: 60px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4da6ff, #00d4ff);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <!-- ==================== 幻灯片1: 视频开场 ==================== -->
+        <div class="slide slide-01 active" data-slide="1">
+            <video id="introVideo" autoplay muted>
+                <source src="intro_video.mp4" type="video/mp4">
+                您的浏览器不支持视频播放
+            </video>
+            <button class="skip-btn" onclick="skipVideo()">跳过 ▶</button>
+        </div>
+
+        <!-- ==================== 幻灯片1b: 座位安排 ==================== -->
+        <div class="slide slide-01b" data-slide="1b">
+            <div class="header-bar">请按照座位分布依次落座</div>
+            <div class="content">
+                <div class="podium">讲台</div>
+                <div class="seating-area">
+                    <div class="seat">A1</div>
+                    <div class="seat">A2</div>
+                    <div class="seat">A3</div>
+                    <div class="seat">A4</div>
+                    <div class="seat">B1</div>
+                    <div class="seat">B2</div>
+                    <div class="seat">B3</div>
+                    <div class="seat">B4</div>
+                    <div class="seat">C1</div>
+                    <div class="seat">C2</div>
+                    <div class="seat">C3</div>
+                    <div class="seat">C4</div>
+                </div>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片2: 签到码 ==================== -->
+        <div class="slide slide-02" data-slide="2">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">学习会签到码</div>
+            <div class="subtitle">微信扫码签到</div>
+            <div class="qr-placeholder">[二维码位置]</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片3: 主页 ==================== -->
+        <div class="slide slide-03" data-slide="3">
+            <div class="gsp-logo gsp-logo-white" style="top: 40px; left: 60px; font-size: 48px;">GSP®</div>
+            <div class="left-section">
+                <div class="main-title">XXX群7月份<br>线下学习会</div>
+                <div class="date">2026年7月X日</div>
+            </div>
+            <div class="right-section">
+                <div class="car-images"></div>
+                <div class="wave-overlay"></div>
+            </div>
+            <div class="website-url website-url-white" style="left: 80px; transform: none;">www.gsp.cn</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片4: 学习会须知 ==================== -->
+        <div class="slide template-blue" data-slide="4">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div class="title">学习会须知</div>
+            <div class="subtitle">请认真阅读以下内容</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片5: 纪律 ==================== -->
+        <div class="slide slide-05" data-slide="5">
+            <div class="gsp-logo gsp-logo-white" style="top: 20px; right: 30px;">冠盛学堂<br><span style="font-size: 14px;">GSP INSTITUTE</span></div>
+            <div class="section-header">
+                <div class="section-title">线下学习会纪律</div>
+            </div>
+            <div class="rules-content">
+                <div class="rules-text">
+                    <p>（一）学习会需提前报名，学习会开始前5分钟到达现场进行签到。迟到将记为黄牌（警告）一次，早退视为缺勤。</p>
+                    <p style="margin-top: 20px;">（二）<span class="highlight">学习期间，严禁刷手机、看抖音等与学习无关的行为。</span>若发现有人在学习期间进行上述行为，将记为黄牌一次，二次黄牌记一次红牌并扣学习积分5分（单场学习会中有2张以上红牌者，将在集团文化交流共创会(原大小组长季度会)进行通报）</p>
+                    <p style="margin-top: 20px;">（三）学习期间，若因特殊情况需离开会场或接听电话，时间不得超过15分钟超过此时间限制者，将视为无效参会，不加分。</p>
+                    <p style="margin-top: 20px;">（四）请勿携带笔记本电脑</p>
+                </div>
+                <div class="warning-cards">
+                    <div class="warning-card yellow">
+                        <div class="card-title">警告</div>
+                        <div class="card-desc">若再次违反学习会纪律，将记红牌，并扣除学习积分5分</div>
+                    </div>
+                    <div class="warning-card red">
+                        <div class="card-title">扣分</div>
+                        <div class="card-desc">违反学习会纪律两次及以上，记红牌，并扣除学习积分5分</div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片6-14: 各种内容页 ==================== -->
+        <div class="slide template-white" data-slide="6">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">学习会流程介绍</div>
+            <div class="content">
+                <p>本次学习会包含以下环节：</p>
+                <ul style="margin-top: 30px; padding-left: 40px; line-height: 2.5;">
+                    <li>开场签到</li>
+                    <li>6月份家书前3名表彰</li>
+                    <li>学习会纪律宣导</li>
+                    <li>宣讲员分享</li>
+                    <li>互动问答环节</li>
+                    <li>总结与结束</li>
+                </ul>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-blue" data-slide="7">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div class="title">01</div>
+            <div class="subtitle">开场签到</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="8">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">签到方式</div>
+            <div class="content" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="font-size: 36px; color: #003366; margin-bottom: 40px;">请扫描屏幕上的二维码完成签到</div>
+                <div style="width: 250px; height: 250px; border: 3px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #999;">[二维码]</div>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-blue" data-slide="9">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div class="title">02</div>
+            <div class="subtitle">6月份家书前3名</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片10: 宣讲员介绍 ==================== -->
+        <div class="slide" data-slide="10" style="background: #003366; flex-direction: row; padding: 80px;">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div style="flex: 1; border: 3px solid white; border-radius: 16px; padding: 50px; display: flex; flex-direction: column; justify-content: center;">
+                <div style="width: 60px; height: 60px; border: 3px solid white; border-radius: 8px; margin-bottom: 40px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <line x1="9" y1="9" x2="15" y2="9"/>
+                        <line x1="9" y1="13" x2="15" y2="13"/>
+                    </svg>
+                </div>
+                <div style="font-size: 56px; font-weight: bold; color: white; margin-bottom: 30px;">宣讲员：XXX</div>
+                <div style="font-size: 28px; color: rgba(255,255,255,0.9); margin-bottom: 10px;">部门：XX</div>
+                <div style="font-size: 28px; color: rgba(255,255,255,0.9);">宣讲主题：《从搬水小事看团队精神》</div>
+            </div>
+            <div style="width: 350px; background: rgba(100,150,200,0.5); border-radius: 12px; margin-left: 40px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">照片</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <div class="slide template-blue" data-slide="11">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div class="title">03</div>
+            <div class="subtitle">宣讲环节</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="12">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">宣讲主题</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center; font-size: 48px; color: #003366; font-weight: bold;">
+                《从搬水小事看团队精神》
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="13">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">团队精神的重要性</div>
+            <div class="content">
+                <p style="font-size: 28px; line-height: 2;">
+                    团队精神是企业文化的重要组成部分，它体现在日常工作中的每一个细节。从搬水这样的小事，我们可以看到团队协作的力量。
+                </p>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-blue" data-slide="14">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div class="title">04</div>
+            <div class="subtitle">互动问答</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片15: 排行榜 ==================== -->
+        <div class="slide slide-15" data-slide="15">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">6月份家书前3名：</div>
+            <div class="ranking-list">
+                <div class="ranking-item">
+                    <div class="rank-number gold">1</div>
+                    <div class="rank-name">第一名</div>
+                    <div class="rank-score">XXX分</div>
+                </div>
+                <div class="ranking-item">
+                    <div class="rank-number silver">2</div>
+                    <div class="rank-name">第二名</div>
+                    <div class="rank-score">XXX分</div>
+                </div>
+                <div class="ranking-item">
+                    <div class="rank-number bronze">3</div>
+                    <div class="rank-name">第三名</div>
+                    <div class="rank-score">XXX分</div>
+                </div>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片16-19: 内容页 ==================== -->
+        <div class="slide template-white" data-slide="16">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">颁奖环节</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center; font-size: 36px; color: #003366;">
+                请获奖者上台领奖
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-blue" data-slide="17">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div class="title">05</div>
+            <div class="subtitle">文化共有，知行共振</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="18">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">文化表情包比拼</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center; font-size: 32px; color: #333;">
+                各小组准备文化表情包进行展示和比拼
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="19">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">比拼规则</div>
+            <div class="content">
+                <ul style="padding-left: 40px; line-height: 2.5; font-size: 24px;">
+                    <li>每组准备3-5个文化表情包</li>
+                    <li>展示时间：每组3分钟</li>
+                    <li>评分标准：创意性、文化契合度、表现力</li>
+                    <li>评委打分，评选最佳创意奖</li>
+                </ul>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片20: 章节页 ==================== -->
+        <div class="slide slide-20" data-slide="20">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div class="content-left">
+                <div class="chapter-number">05</div>
+                <div class="chapter-title">文化共有，知行共振</div>
+                <div class="chapter-subtitle">——文化表情包比拼</div>
+            </div>
+            <div class="image-section">
+                <div class="car-image"></div>
+                <div class="diagonal-cut"></div>
+            </div>
+            <div class="website-url website-url-white" style="right: 30px; left: auto; transform: none;">www.gsp.cn</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片21-29: 内容页 ==================== -->
+        <div class="slide template-white" data-slide="21">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">小组展示</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center; font-size: 36px; color: #003366;">
+                请各小组依次上台展示文化表情包
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="22">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">第一组展示</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center;">
+                <div style="width: 400px; height: 300px; border: 3px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 18px;">[表情包展示区]</div>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="23">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">第二组展示</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center;">
+                <div style="width: 400px; height: 300px; border: 3px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 18px;">[表情包展示区]</div>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="24">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">第三组展示</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center;">
+                <div style="width: 400px; height: 300px; border: 3px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 18px;">[表情包展示区]</div>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="25">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">第四组展示</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center;">
+                <div style="width: 400px; height: 300px; border: 3px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 18px;">[表情包展示区]</div>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="26">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">第五组展示</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center;">
+                <div style="width: 400px; height: 300px; border: 3px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 18px;">[表情包展示区]</div>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="27">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">评分环节</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center; font-size: 36px; color: #003366;">
+                请评委为各组打分
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-blue" data-slide="28">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div class="title">06</div>
+            <div class="subtitle">知识问答</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="29">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">问答规则</div>
+            <div class="content">
+                <ul style="padding-left: 40px; line-height: 2.5; font-size: 24px;">
+                    <li>答对题目获得相应积分</li>
+                    <li>答错不扣分</li>
+                    <li>鼓励全员积极参与挑战</li>
+                    <li>每题10分，共15题</li>
+                </ul>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片30: 问答题 ==================== -->
+        <div class="slide slide-30" data-slide="30">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">1、以下哪项是GSP的核心价值观？</div>
+            <div class="options">
+                <div class="option">A. 追求利润最大化</div>
+                <div class="option">B. 客户至上，品质第一</div>
+                <div class="option">C. 快速扩张</div>
+                <div class="option">D. 降低成本</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片31-44: 更多问答题 ==================== -->
+        <div class="slide slide-30" data-slide="31">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">2、学习会迟到将受到什么处罚？</div>
+            <div class="options">
+                <div class="option">A. 直接扣分</div>
+                <div class="option">B. 记黄牌一次</div>
+                <div class="option">C. 通报批评</div>
+                <div class="option">D. 无处罚</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="32">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">3、学习期间手机使用规定是？</div>
+            <div class="options">
+                <div class="option">A. 可以静音使用</div>
+                <div class="option">B. 严禁刷手机、看抖音</div>
+                <div class="option">C. 可以回复紧急消息</div>
+                <div class="option">D. 无限制</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="33">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">4、离开会场接听电话的时间限制是？</div>
+            <div class="options">
+                <div class="option">A. 5分钟</div>
+                <div class="option">B. 10分钟</div>
+                <div class="option">C. 15分钟</div>
+                <div class="option">D. 无限制</div>
+            </div>
+            <div class="answer">答案：C</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="34">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">5、二次黄牌的处罚是？</div>
+            <div class="options">
+                <div class="option">A. 再记一次黄牌</div>
+                <div class="option">B. 记红牌并扣5分</div>
+                <div class="option">C. 通报批评</div>
+                <div class="option">D. 无处罚</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="35">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">6、持续拼命工作的必要条件是什么？</div>
+            <div class="options">
+                <div class="option">A. 高薪</div>
+                <div class="option">B. 舒适的工作环境</div>
+                <div class="option">C. 喜欢上现在所从事的工作</div>
+                <div class="option">D. 轻松的工作氛围</div>
+            </div>
+            <div class="answer">答案：C</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="36">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">7、GSP的全称是？</div>
+            <div class="options">
+                <div class="option">A. 广州汽车集团</div>
+                <div class="option">B. 冠盛汽车零部件集团</div>
+                <div class="option">C. 国盛汽车集团</div>
+                <div class="option">D. 光速汽车集团</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="37">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">8、学习会开始前几分钟需要签到？</div>
+            <div class="options">
+                <div class="option">A. 3分钟</div>
+                <div class="option">B. 5分钟</div>
+                <div class="option">C. 10分钟</div>
+                <div class="option">D. 15分钟</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="38">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">9、以下哪项行为不被允许？</div>
+            <div class="options">
+                <div class="option">A. 记笔记</div>
+                <div class="option">B. 提问</div>
+                <div class="option">C. 携带笔记本电脑</div>
+                <div class="option">D. 参与讨论</div>
+            </div>
+            <div class="answer">答案：C</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="39">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">10、2张以上红牌会被通报到哪个会议？</div>
+            <div class="options">
+                <div class="option">A. 周例会</div>
+                <div class="option">B. 集团文化交流共创会</div>
+                <div class="option">C. 月度总结会</div>
+                <div class="option">D. 年度大会</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="40">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">11、GSP公司位于哪个城市？</div>
+            <div class="options">
+                <div class="option">A. 杭州</div>
+                <div class="option">B. 宁波</div>
+                <div class="option">C. 温州</div>
+                <div class="option">D. 上海</div>
+            </div>
+            <div class="answer">答案：C</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="41">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">12、早退在学习会中被视为？</div>
+            <div class="options">
+                <div class="option">A. 警告</div>
+                <div class="option">B. 缺勤</div>
+                <div class="option">C. 迟到</div>
+                <div class="option">D. 请假</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="42">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">13、违反纪律两次及以上会被扣多少分？</div>
+            <div class="options">
+                <div class="option">A. 3分</div>
+                <div class="option">B. 5分</div>
+                <div class="option">C. 10分</div>
+                <div class="option">D. 不扣分</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="43">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">14、GSP的官方网站是？</div>
+            <div class="options">
+                <div class="option">A. www.gsp.com</div>
+                <div class="option">B. www.gsp.cn</div>
+                <div class="option">C. www.gsp.net</div>
+                <div class="option">D. www.gsp.com.cn</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide slide-30" data-slide="44">
+            <div class="gsp-logo">GSP®</div>
+            <div class="quiz-header">答对题目获得相应积分，答错不扣分，鼓励全员积极参与挑战。每题10分，共15题。</div>
+            <div class="quiz-section">一、单项选择题（每题10分，共15题）</div>
+            <div class="question">15、冠盛学堂的英文名称是？</div>
+            <div class="options">
+                <div class="option">A. GSP School</div>
+                <div class="option">B. GSP Institute</div>
+                <div class="option">C. GSP Academy</div>
+                <div class="option">D. GSP University</div>
+            </div>
+            <div class="answer">答案：B</div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <!-- ==================== 幻灯片45-65: 后续内容 ==================== -->
+        <div class="slide template-blue" data-slide="45">
+            <div class="gsp-logo gsp-logo-white">GSP®</div>
+            <div class="title">07</div>
+            <div class="subtitle">总结与结束</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="46">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">本次学习会总结</div>
+            <div class="content">
+                <ul style="padding-left: 40px; line-height: 2.5; font-size: 24px;">
+                    <li>学习会纪律宣导完成</li>
+                    <li>6月份家书前3名表彰</li>
+                    <li>宣讲员分享《从搬水小事看团队精神》</li>
+                    <li>文化表情包比拼</li>
+                    <li>知识问答环节</li>
+                </ul>
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="47">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">下期预告</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center; font-size: 32px; color: #003366;">
+                敬请期待8月份学习会
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <div class="slide template-white" data-slide="48">
+            <div class="gsp-logo">GSP®</div>
+            <div class="title">感谢参与</div>
+            <div class="content" style="display: flex; align-items: center; justify-content: center; font-size: 36px; color: #003366;">
+                感谢大家的积极参与！
+            </div>
+            <div class="page-indicator">Page No -</div>
+        </div>
+
+        <!-- 49-65 为重复或补充页面，使用模板 -->
+        <div class="slide template-white" data-slide="49"><div class="gsp-logo">GSP®</div><div class="title">补充内容 1</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="50"><div class="gsp-logo">GSP®</div><div class="title">补充内容 2</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="51"><div class="gsp-logo">GSP®</div><div class="title">补充内容 3</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="52"><div class="gsp-logo">GSP®</div><div class="title">补充内容 4</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="53"><div class="gsp-logo">GSP®</div><div class="title">补充内容 5</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="54"><div class="gsp-logo">GSP®</div><div class="title">补充内容 6</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="55"><div class="gsp-logo">GSP®</div><div class="title">补充内容 7</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="56"><div class="gsp-logo">GSP®</div><div class="title">补充内容 8</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="57"><div class="gsp-logo">GSP®</div><div class="title">补充内容 9</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="58"><div class="gsp-logo">GSP®</div><div class="title">补充内容 10</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="59"><div class="gsp-logo">GSP®</div><div class="title">补充内容 11</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="60"><div class="gsp-logo">GSP®</div><div class="title">补充内容 12</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="61"><div class="gsp-logo">GSP®</div><div class="title">补充内容 13</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="62"><div class="gsp-logo">GSP®</div><div class="title">补充内容 14</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="63"><div class="gsp-logo">GSP®</div><div class="title">补充内容 15</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="64"><div class="gsp-logo">GSP®</div><div class="title">补充内容 16</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+        <div class="slide template-white" data-slide="65"><div class="gsp-logo">GSP®</div><div class="title">补充内容 17</div><div class="content"></div><div class="page-indicator">Page No -</div></div>
+
+        <!-- ==================== 幻灯片66: 结束页 ==================== -->
+        <div class="slide slide-66" data-slide="66">
+            <div class="background-image"></div>
+            <div class="gsp-logo gsp-logo-white" style="top: 30px; right: 40px; font-size: 42px;">GSP®</div>
+            <div class="content">
+                <div class="thanks-text">THANKS</div>
+                <div class="company-name">GSP AUTOMOTIVE GROUP</div>
+                <div class="contact-info">
+                    <p>+86(0)577 86292929</p>
+                    <p>No. 1, Niushan South Road, Wutian Subdistrict,</p>
+                    <p>Ouhai District, Wenzhou, Zhejiang, China</p>
+                </div>
+                <div class="social-links">
+                    <div class="social-item">
+                        <div class="social-icon">f</div>
+                        <div class="social-label">GSP Facebook</div>
+                    </div>
+                    <div class="social-item">
+                        <div class="social-icon">in</div>
+                        <div class="social-label">GSP Linkedin</div>
+                    </div>
+                    <div class="social-item">
+                        <div class="social-icon">▶</div>
+                        <div class="social-label">GSP Youtube</div>
+                    </div>
+                </div>
+            </div>
+            <div class="website-url website-url-white" style="left: 80px; transform: none;">www.gsp.cn</div>
+            <div class="page-indicator page-indicator-white">Page No -</div>
+        </div>
+    </div>
+
+    <!-- 进度条 -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 1.5%;"></div>
+    </div>
+
+    <!-- 控制栏 -->
+    <div class="control-bar">
+        <div class="nav-buttons">
+            <button class="nav-btn" id="firstBtn" onclick="goToSlide(1)">⏮ 首页</button>
+            <button class="nav-btn" id="prevBtn" onclick="prevSlide()">◀ 上一页</button>
+            <button class="nav-btn" id="nextBtn" onclick="nextSlide()">下一页 ▶</button>
+            <button class="nav-btn" id="lastBtn" onclick="goToSlide(66)">末页 ⏭</button>
+        </div>
+        <div class="page-info">
+            <span>第</span>
+            <input type="number" class="page-input" id="pageInput" min="1" max="67" value="1" onchange="goToSlide(this.value)">
+            <span>/ 67 页</span>
+        </div>
+        <div>
+            <button class="nav-btn" onclick="toggleFullscreen()">⛶ 全屏</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = '1';
+        const totalSlides = 66;
+        const slideOrder = ['1', '1b', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62', '63', '64', '65', '66'];
+
+        // ==================== WebSocket 连接 ====================
+        let ws = null;
+        let isRemoteControl = false; // 标记是否来自远程控制
+
+        function connectWebSocket() {
+            const wsUrl = `ws://${window.location.hostname}:8765`;
+            console.log('连接 WebSocket:', wsUrl);
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = function() {
+                console.log('✅ WebSocket 连接成功');
+                // 显示连接状态指示器
+                showConnectionStatus(true);
+            };
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('收到消息:', data);
+                handleRemoteCommand(data);
+            };
+
+            ws.onclose = function() {
+                console.log('❌ WebSocket 连接断开');
+                showConnectionStatus(false);
+                // 尝试重连
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket 错误:', error);
+            };
+        }
+
+        // 处理远程控制命令
+        function handleRemoteCommand(data) {
+            switch(data.type) {
+                case 'next':
+                    isRemoteControl = true;
+                    nextSlide();
+                    isRemoteControl = false;
+                    syncState(); // 同步状态给其他客户端
+                    break;
+
+                case 'prev':
+                    isRemoteControl = true;
+                    prevSlide();
+                    isRemoteControl = false;
+                    syncState();
+                    break;
+
+                case 'goto':
+                    isRemoteControl = true;
+                    goToSlide(parseInt(data.slide));
+                    isRemoteControl = false;
+                    syncState();
+                    break;
+
+                case 'first':
+                    isRemoteControl = true;
+                    showSlide('1');
+                    isRemoteControl = false;
+                    syncState();
+                    break;
+
+                case 'last':
+                    isRemoteControl = true;
+                    showSlide('66');
+                    isRemoteControl = false;
+                    syncState();
+                    break;
+
+                case 'fullscreen':
+                    toggleFullscreen();
+                    break;
+
+                case 'replay_video':
+                    isRemoteControl = true;
+                    showSlide('1');
+                    isRemoteControl = false;
+                    break;
+
+                case 'state':
+                    // 如果是新连接，同步当前状态
+                    if (data.slide !== currentSlide) {
+                        showSlide(data.slide);
+                    }
+                    break;
+            }
+        }
+
+        // 同步状态到服务器
+        function syncState() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'sync',
+                    slide: currentSlide
+                }));
+            }
+        }
+
+        // 显示连接状态
+        function showConnectionStatus(connected) {
+            let indicator = document.getElementById('wsIndicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'wsIndicator';
+                indicator.style.cssText = `
+                    position: fixed;
+                    top: 10px;
+                    left: 10px;
+                    padding: 8px 15px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    z-index: 10000;
+                    transition: all 0.3s ease;
+                `;
+                document.body.appendChild(indicator);
+            }
+
+            if (connected) {
+                indicator.style.background = 'rgba(46, 204, 113, 0.9)';
+                indicator.style.color = 'white';
+                indicator.textContent = '✓ 已连接控制端';
+            } else {
+                indicator.style.background = 'rgba(231, 76, 60, 0.9)';
+                indicator.style.color = 'white';
+                indicator.textContent = '✗ 连接中...';
+            }
+
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+                setTimeout(() => indicator.style.display = 'none', 300);
+            }, 3000);
+        }
+
+        // ==================== 幻灯片控制 ====================
+        function showSlide(slideId) {
+            const index = slideOrder.indexOf(String(slideId));
+            if (index === -1) return;
+
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            const target = document.querySelector(`[data-slide="${slideId}"]`);
+            if (target) {
+                target.classList.add('active');
+                currentSlide = slideId;
+
+                // 更新页码显示（视频页显示为1）
+                const displayNum = slideId === '1' ? 1 : slideId === '1b' ? 2 : parseInt(slideId);
+                document.getElementById('pageInput').value = displayNum;
+
+                // 更新进度条
+                const progress = ((index + 1) / slideOrder.length) * 100;
+                document.getElementById('progressFill').style.width = `${progress}%`;
+
+                updateButtons();
+
+                // 如果切换到视频页，自动播放视频
+                if (slideId === '1') {
+                    const video = document.getElementById('introVideo');
+                    if (video) {
+                        video.currentTime = 0;
+                        video.play();
+                    }
+                }
+            }
+        }
+
+        function nextSlide() {
+            const index = slideOrder.indexOf(currentSlide);
+            if (index < slideOrder.length - 1) {
+                showSlide(slideOrder[index + 1]);
+            }
+        }
+
+        function prevSlide() {
+            const index = slideOrder.indexOf(currentSlide);
+            if (index > 0) {
+                showSlide(slideOrder[index - 1]);
+            }
+        }
+
+        function goToSlide(num) {
+            const n = parseInt(num);
+            if (n === 1) showSlide('1');
+            else if (n === 2) showSlide('1b');
+            else showSlide(String(n));
+        }
+
+        function skipVideo() {
+            // 跳过视频，直接进入下一页
+            nextSlide();
+            syncState();
+        }
+
+        function updateButtons() {
+            const index = slideOrder.indexOf(currentSlide);
+            document.getElementById('firstBtn').disabled = index === 0;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === slideOrder.length - 1;
+            document.getElementById('lastBtn').disabled = index === slideOrder.length - 1;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // 切换控制栏显示
+        function toggleControlBar() {
+            const controlBar = document.querySelector('.control-bar');
+            const progressBar = document.querySelector('.progress-bar');
+            controlBar.classList.toggle('visible');
+            progressBar.classList.toggle('visible');
+        }
+
+        // 视频播放结束自动跳转
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('introVideo');
+            if (video) {
+                video.addEventListener('ended', function() {
+                    nextSlide();
+                    syncState();
+                });
+            }
+
+            // 连接 WebSocket
+            connectWebSocket();
+        });
+
+        // 键盘事件
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT') return;
+
+            // Ctrl+F1 切换控制栏
+            if (e.ctrlKey && e.key === 'F1') {
+                e.preventDefault();
+                toggleControlBar();
+                return;
+            }
+
+            switch(e.key) {
+                case 'ArrowRight':
+                case ' ':
+                    e.preventDefault();
+                    nextSlide();
+                    syncState();
+                    break;
+                case 'ArrowLeft':
+                case 'Backspace':
+                    e.preventDefault();
+                    prevSlide();
+                    syncState();
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    showSlide('1');
+                    syncState();
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    showSlide('66');
+                    syncState();
+                    break;
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+                case 'Escape':
+                    // 视频页按ESC跳过视频
+                    if (currentSlide === '1') {
+                        skipVideo();
+                    }
+                    break;
+            }
+        });
+
+        // 鼠标滚轮
+        document.addEventListener('wheel', function(e) {
+            if (e.deltaY > 0) nextSlide();
+            else prevSlide();
+        }, { passive: true });
+
+        // 点击视频跳过
+        document.getElementById('introVideo')?.addEventListener('click', function() {
+            skipVideo();
+        });
+
+        // 初始化
+        updateButtons();
+    </script>
+</body>
+</html>
