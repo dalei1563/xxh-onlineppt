@@ -3,4 +3,5 @@ __pycache__/
 *.pyo
 data/
 audio/
+static/uploads/
 .env

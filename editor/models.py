@@ -24,4 +24,19 @@ class SlideReorder(BaseModel):
 class SlideUpdate(BaseModel):
     """更新幻灯片内容"""
     title: Optional[str] = None
+    chapter: Optional[str] = None
     content_json: Optional[Dict[str, Any]] = None
+
+
+class SlideCreate(BaseModel):
+    """创建幻灯片请求"""
+    type: str
+    chapter: Optional[str] = None
+    title: Optional[str] = None
+    content_json: Optional[Dict[str, Any]] = None
+
+
+class SlideRenderResponse(BaseModel):
+    """渲染单页幻灯片响应"""
+    slide_id: str
+    html: str

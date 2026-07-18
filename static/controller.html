@@ -6,116 +6,25 @@
     <title>GSP 学习会 - AI 主持控制台</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
-            background: linear-gradient(135deg, #003366 0%, #004d99 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: white;
-            user-select: none;
-        }
-
-        /* 头部 */
-        .header {
-            padding: 16px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
-            flex-shrink: 0;
-        }
+        body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; background: linear-gradient(135deg, #003366 0%, #004d99 100%); min-height: 100vh; display: flex; flex-direction: column; color: white; user-select: none; }
+        .header { padding: 16px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; }
         .logo { font-size: 22px; font-weight: bold; }
         .subtitle { font-size: 12px; opacity: 0.8; margin-top: 2px; }
-
-        /* 状态栏 */
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 16px;
-            background: rgba(0,0,0,0.2);
-            flex-shrink: 0;
-        }
+        .status-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: rgba(0,0,0,0.2); flex-shrink: 0; }
         .status-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-        .status-dot {
-            width: 8px; height: 8px; border-radius: 50%; background: #e74c3c;
-            transition: background 0.3s;
-        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #e74c3c; transition: background 0.3s; }
         .status-dot.connected { background: #2ecc71; }
-
-        /* Tab 导航 */
-        .tab-bar {
-            display: flex;
-            background: rgba(0,0,0,0.25);
-            flex-shrink: 0;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .tab-btn {
-            flex: 1;
-            min-width: 60px;
-            padding: 12px 8px;
-            text-align: center;
-            font-size: 13px;
-            color: rgba(255,255,255,0.6);
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            transition: all 0.2s;
-            position: relative;
-            white-space: nowrap;
-        }
-        .tab-btn.active {
-            color: white;
-            background: rgba(255,255,255,0.1);
-        }
-        .tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 20%;
-            right: 20%;
-            height: 3px;
-            background: #2ecc71;
-            border-radius: 3px 3px 0 0;
-        }
+        .tab-bar { display: flex; background: rgba(0,0,0,0.25); flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab-btn { flex: 1; min-width: 60px; padding: 12px 8px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.6); cursor: pointer; border: none; background: transparent; transition: all 0.2s; position: relative; white-space: nowrap; }
+        .tab-btn.active { color: white; background: rgba(255,255,255,0.1); }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 3px; background: #2ecc71; border-radius: 3px 3px 0 0; }
         .tab-btn .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
-
-        /* Tab 内容容器 */
-        .tab-content {
-            flex: 1;
-            display: none;
-            overflow-y: auto;
-            padding-bottom: 20px;
-        }
+        .tab-content { flex: 1; display: none; overflow-y: auto; padding-bottom: 20px; }
         .tab-content.active { display: block; }
-
-        /* ========== 公用小组件 ========== */
         .section { padding: 16px; }
-        .section-title {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .card {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 12px;
-        }
-        .btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.15s;
-            color: white;
-        }
+        .section-title { font-size: 14px; opacity: 0.8; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .card { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.15s; color: white; }
         .btn:active { transform: scale(0.96); opacity: 0.8; }
         .btn-primary { background: #2ecc71; }
         .btn-danger { background: #e74c3c; }
@@ -124,217 +33,70 @@
         .btn-sm { padding: 6px 12px; font-size: 12px; }
         .btn-lg { padding: 14px 24px; font-size: 16px; }
         .btn-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .input {
-            padding: 10px 14px;
-            border: 2px solid rgba(255,255,255,0.25);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.08);
-            color: white;
-            font-size: 14px;
-            width: 100%;
-            outline: none;
-            transition: border-color 0.2s;
-        }
+        .input { padding: 10px 14px; border: 2px solid rgba(255,255,255,0.25); border-radius: 8px; background: rgba(255,255,255,0.08); color: white; font-size: 14px; width: 100%; outline: none; transition: border-color 0.2s; }
         .input:focus { border-color: #2ecc71; }
         .input::placeholder { color: rgba(255,255,255,0.4); }
         .input-group { display: flex; gap: 8px; }
         .input-group .input { flex: 1; }
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            background: rgba(255,255,255,0.15);
-        }
-        .toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.85);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            text-align: center;
-        }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; background: rgba(255,255,255,0.15); }
+        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; text-align: center; }
         .toast.show { opacity: 1; }
-
-        /* ========== Tab 1: 遥控 ========== */
-        .current-page {
-            text-align: center;
-            padding: 16px 20px 8px;
-        }
+        .current-page { text-align: center; padding: 16px 20px 8px; }
         .page-label { font-size: 13px; opacity: 0.7; margin-bottom: 4px; }
         .page-number { font-size: 56px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .page-total { font-size: 16px; opacity: 0.6; }
-
         .control-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .control-btn {
-            flex: 1;
-            padding: 14px 8px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.15s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255,255,255,0.92);
-            color: #003366;
-        }
+        .control-btn { flex: 1; padding: 14px 8px; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 4px; background: rgba(255,255,255,0.92); color: #003366; }
         .control-btn:active { transform: scale(0.94); }
         .control-btn .icon { font-size: 22px; }
         .control-btn.secondary { background: rgba(255,255,255,0.18); color: white; }
-
         .jump-section { padding: 0 16px; }
         .jump-input-row { display: flex; gap: 8px; }
-        .jump-input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid rgba(255,255,255,0.25);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.08);
-            color: white;
-            font-size: 18px;
-            text-align: center;
-            outline: none;
-        }
+        .jump-input { flex: 1; padding: 12px; border: 2px solid rgba(255,255,255,0.25); border-radius: 8px; background: rgba(255,255,255,0.08); color: white; font-size: 18px; text-align: center; outline: none; }
         .jump-input:focus { border-color: #2ecc71; }
-
-        .quick-pages {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 10px;
-        }
-        .quick-page-btn {
-            padding: 7px 12px;
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 6px;
-            background: rgba(255,255,255,0.08);
-            color: white;
-            font-size: 12px;
-            cursor: pointer;
-        }
+        .quick-pages { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .quick-page-btn { padding: 7px 12px; border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; background: rgba(255,255,255,0.08); color: white; font-size: 12px; cursor: pointer; }
         .quick-page-btn:active { background: rgba(255,255,255,0.2); }
-
         .qr-section { padding: 16px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; }
         .qr-container { display: inline-block; padding: 10px; background: white; border-radius: 10px; }
         #qrcode { width: 100px; height: 100px; }
         .qr-hint { font-size: 11px; opacity: 0.6; margin-top: 6px; }
-
-        /* ========== Tab 2: 积分管理 ========== */
-        .score-team {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            gap: 10px;
-        }
+        .score-team { display: flex; align-items: center; padding: 12px; background: rgba(255,255,255,0.08); border-radius: 8px; margin-bottom: 8px; gap: 10px; }
         .score-team .name { flex: 1; font-size: 15px; font-weight: bold; }
         .score-team .score { font-size: 24px; font-weight: bold; min-width: 40px; text-align: center; }
         .score-team .score-actions { display: flex; gap: 4px; }
-        .score-team .score-actions button {
-            width: 36px; height: 36px;
-            border: none; border-radius: 6px;
-            font-size: 18px; font-weight: bold;
-            cursor: pointer; color: white;
-            transition: all 0.1s;
-        }
+        .score-team .score-actions button { width: 36px; height: 36px; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; transition: all 0.1s; }
         .score-team .score-actions button:active { transform: scale(0.9); }
         .btn-score-add { background: #2ecc71; }
         .btn-score-sub { background: #e74c3c; }
-        .btn-score-custom {
-            background: rgba(255,255,255,0.15);
-            font-size: 14px !important;
-        }
-
-        .leaderboard-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 14px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 8px;
-            margin-bottom: 6px;
-            gap: 12px;
-        }
-        .leaderboard-item .rank {
-            width: 28px; height: 28px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 13px; font-weight: bold;
-        }
+        .btn-score-custom { background: rgba(255,255,255,0.15); font-size: 14px !important; }
+        .leaderboard-item { display: flex; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 6px; gap: 12px; }
+        .leaderboard-item .rank { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; }
         .rank-1 { background: linear-gradient(135deg, #f1c40f, #f39c12); }
         .rank-2 { background: linear-gradient(135deg, #bdc3c7, #95a5a6); }
         .rank-3 { background: linear-gradient(135deg, #e67e22, #d35400); }
         .rank-other { background: rgba(255,255,255,0.15); }
-
-        /* ========== Tab 3: 语音播报 ========== */
-        .tts-presets {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-        .tts-preset-btn {
-            padding: 6px 12px;
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 6px;
-            background: rgba(255,255,255,0.08);
-            color: white;
-            font-size: 12px;
-            cursor: pointer;
-        }
+        .tts-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+        .tts-preset-btn { padding: 6px 12px; border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; background: rgba(255,255,255,0.08); color: white; font-size: 12px; cursor: pointer; }
         .tts-preset-btn:active { background: rgba(255,255,255,0.2); }
-        .tts-textarea {
-            width: 100%;
-            min-height: 80px;
-            padding: 12px;
-            border: 2px solid rgba(255,255,255,0.25);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.08);
-            color: white;
-            font-size: 14px;
-            resize: vertical;
-            outline: none;
-            font-family: inherit;
-            line-height: 1.6;
-        }
+        .tts-textarea { width: 100%; min-height: 80px; padding: 12px; border: 2px solid rgba(255,255,255,0.25); border-radius: 8px; background: rgba(255,255,255,0.08); color: white; font-size: 14px; resize: vertical; outline: none; font-family: inherit; line-height: 1.6; }
         .tts-textarea:focus { border-color: #2ecc71; }
         .tts-textarea::placeholder { color: rgba(255,255,255,0.4); }
-
-        /* ========== Tab 4: 游戏控制 ========== */
-        .game-status {
-            text-align: center;
-            padding: 20px;
-        }
+        .game-status { text-align: center; padding: 20px; }
         .game-status .status-icon { font-size: 40px; margin-bottom: 8px; }
         .game-status .status-text { font-size: 16px; opacity: 0.8; }
         .game-round-name { font-size: 20px; font-weight: bold; margin-top: 4px; }
-
         .demo-link { text-align: center; padding: 12px; font-size: 12px; opacity: 0.6; }
         .demo-link a { color: white; }
     </style>
 </head>
 <body>
 
-<!-- 头部 -->
 <div class="header">
     <div class="logo">GSP® AI 主持控制台</div>
     <div class="subtitle">2026年7月线下学习会</div>
 </div>
 
-<!-- 状态栏 -->
 <div class="status-bar">
     <div class="status-item">
         <div class="status-dot" id="statusDot"></div>
@@ -348,74 +110,42 @@
     </div>
 </div>
 
-<!-- Tab 导航 -->
 <div class="tab-bar">
-    <button class="tab-btn active" data-tab="remote">
-        <span class="tab-icon">📱</span> 遥控
-    </button>
-    <button class="tab-btn" data-tab="scores">
-        <span class="tab-icon">🏆</span> 积分
-    </button>
-    <button class="tab-btn" data-tab="tts">
-        <span class="tab-icon">🔊</span> 播报
-    </button>
-    <button class="tab-btn" data-tab="game">
-        <span class="tab-icon">🎮</span> 游戏
-    </button>
-    <button class="tab-btn" data-tab="ai">
-        <span class="tab-icon">🤖</span> AI
-    </button>
+    <button class="tab-btn active" data-tab="remote"><span class="tab-icon">📱</span> 遥控</button>
+    <button class="tab-btn" data-tab="scores"><span class="tab-icon">🏆</span> 积分</button>
+    <button class="tab-btn" data-tab="tts"><span class="tab-icon">🔊</span> 播报</button>
+    <button class="tab-btn" data-tab="game"><span class="tab-icon">🎮</span> 游戏</button>
+    <button class="tab-btn" data-tab="ai"><span class="tab-icon">🤖</span> AI</button>
 </div>
 
-<!-- ===== Tab 1: 遥控 ===== -->
+<!-- Tab 1: 遥控 -->
 <div class="tab-content active" id="tab-remote">
     <div class="current-page">
         <div class="page-label">当前页码</div>
         <div class="page-number" id="currentPage">1</div>
-        <div class="page-total">/ 67 页</div>
+        <div class="page-total">/ <span id="totalPages">0</span> 页</div>
     </div>
 
     <div class="section">
         <div class="control-row">
-            <button class="control-btn" onclick="goFirst()">
-                <span class="icon">⏮</span> 首页
-            </button>
-            <button class="control-btn" onclick="goPrev()">
-                <span class="icon">◀</span> 上一页
-            </button>
-            <button class="control-btn" onclick="goNext()">
-                <span class="icon">▶</span> 下一页
-            </button>
-            <button class="control-btn" onclick="goLast()">
-                <span class="icon">⏭</span> 末页
-            </button>
+            <button class="control-btn" onclick="app.first()"><span class="icon">⏮</span> 首页</button>
+            <button class="control-btn" onclick="app.prev()"><span class="icon">◀</span> 上一页</button>
+            <button class="control-btn" onclick="app.next()"><span class="icon">▶</span> 下一页</button>
+            <button class="control-btn" onclick="app.last()"><span class="icon">⏭</span> 末页</button>
         </div>
         <div class="control-row">
-            <button class="control-btn secondary" onclick="toggleFullscreen()">
-                <span class="icon">⛶</span> 全屏
-            </button>
-            <button class="control-btn secondary" onclick="toggleVideo()">
-                <span class="icon">▶</span> 重播视频
-            </button>
+            <button class="control-btn secondary" onclick="app.toggleFullscreen()"><span class="icon">⛶</span> 全屏</button>
+            <button class="control-btn secondary" onclick="app.replayVideo()"><span class="icon">▶</span> 重播视频</button>
         </div>
     </div>
 
     <div class="jump-section">
         <div class="section-title">📌 快速跳转</div>
         <div class="jump-input-row">
-            <input type="number" class="jump-input" id="jumpInput" placeholder="输入页码" min="1" max="67">
-            <button class="btn btn-primary" onclick="jumpTo()" style="padding: 12px 20px;">跳转</button>
+            <input type="number" class="jump-input" id="jumpInput" placeholder="输入页码" min="1">
+            <button class="btn btn-primary" onclick="app.jumpTo()" style="padding: 12px 20px;">跳转</button>
         </div>
-        <div class="quick-pages">
-            <button class="quick-page-btn" onclick="jumpTo(1)">视频</button>
-            <button class="quick-page-btn" onclick="jumpTo(2)">座位</button>
-            <button class="quick-page-btn" onclick="jumpTo(3)">签到</button>
-            <button class="quick-page-btn" onclick="jumpTo(4)">主页</button>
-            <button class="quick-page-btn" onclick="jumpTo(11)">宣讲员</button>
-            <button class="quick-page-btn" onclick="jumpTo(16)">排行榜</button>
-            <button class="quick-page-btn" onclick="jumpTo(31)">问答</button>
-            <button class="quick-page-btn" onclick="jumpTo(67)">结束</button>
-        </div>
+        <div class="quick-pages" id="quickPages"></div>
     </div>
 
     <div class="qr-section">
@@ -424,38 +154,35 @@
     </div>
 </div>
 
-<!-- ===== Tab 2: 积分管理 ===== -->
+<!-- Tab 2: 积分管理 -->
 <div class="tab-content" id="tab-scores">
     <div class="section">
         <div class="section-title">🏆 各组实时积分</div>
         <div id="scoreList"></div>
         <div class="btn-row">
-            <button class="btn btn-danger btn-sm" onclick="resetAllScores()">🔄 重置所有积分</button>
-            <button class="btn btn-secondary btn-sm" onclick="requestLeaderboard()">📊 广播排行榜</button>
+            <button class="btn btn-danger btn-sm" onclick="app.resetAllScores()">🔄 重置所有积分</button>
+            <button class="btn btn-secondary btn-sm" onclick="app.requestLeaderboard()">📊 广播排行榜</button>
         </div>
     </div>
-
     <div class="section">
         <div class="section-title">📊 积分排行榜</div>
-        <div id="leaderboardList">
-            <div style="text-align:center; opacity:0.5; padding:20px; font-size:13px;">暂无数据</div>
-        </div>
+        <div id="leaderboardList"><div style="text-align:center; opacity:0.5; padding:20px; font-size:13px;">暂无数据</div></div>
     </div>
 </div>
 
-<!-- ===== Tab 3: 语音播报 ===== -->
+<!-- Tab 3: 语音播报 -->
 <div class="tab-content" id="tab-tts">
     <div class="section">
         <div class="section-title">🔊 AI 语音播报</div>
         <div class="card">
             <div style="font-size:13px; opacity:0.7; margin-bottom:8px;">预设播报内容</div>
             <div class="tts-presets">
-                <button class="tts-preset-btn" onclick="setTtsText('大家好，欢迎参加本次学习会')">欢迎语</button>
-                <button class="tts-preset-btn" onclick="setTtsText('请各小组做好准备')">小组准备</button>
-                <button class="tts-preset-btn" onclick="setTtsText('请鼓掌欢迎')">鼓掌</button>
-                <button class="tts-preset-btn" onclick="setTtsText('时间到，请停止讨论')">时间到</button>
-                <button class="tts-preset-btn" onclick="setTtsText('感谢大家的积极参与')">感谢参与</button>
-                <button class="tts-preset-btn" onclick="setTtsText('本次学习会到此结束')">结束语</button>
+                <button class="tts-preset-btn" onclick="app.setTtsText('大家好，欢迎参加本次学习会')">欢迎语</button>
+                <button class="tts-preset-btn" onclick="app.setTtsText('请各小组做好准备')">小组准备</button>
+                <button class="tts-preset-btn" onclick="app.setTtsText('请鼓掌欢迎')">鼓掌</button>
+                <button class="tts-preset-btn" onclick="app.setTtsText('时间到，请停止讨论')">时间到</button>
+                <button class="tts-preset-btn" onclick="app.setTtsText('感谢大家的积极参与')">感谢参与</button>
+                <button class="tts-preset-btn" onclick="app.setTtsText('本次学习会到此结束')">结束语</button>
             </div>
         </div>
         <div class="card">
@@ -463,13 +190,13 @@
             <textarea class="tts-textarea" id="ttsText" placeholder="请输入要播报的文字内容...">大家好，欢迎参加本次学习会</textarea>
         </div>
         <div class="btn-row">
-            <button class="btn btn-primary btn-lg" onclick="speakTts()" style="flex:2;">🔊 立即播报</button>
-            <button class="btn btn-secondary btn-lg" onclick="stopTts()" style="flex:1;">⏹ 停止</button>
+            <button class="btn btn-primary btn-lg" onclick="app.speakTts()" style="flex:2;">🔊 立即播报</button>
+            <button class="btn btn-secondary btn-lg" onclick="app.stopTts()" style="flex:1;">⏹ 停止</button>
         </div>
     </div>
 </div>
 
-<!-- ===== Tab 4: 游戏控制 ===== -->
+<!-- Tab 4: 游戏控制 -->
 <div class="tab-content" id="tab-game">
     <div class="section">
         <div class="section-title">🎮 游戏环节控制</div>
@@ -485,402 +212,368 @@
             </div>
         </div>
         <div class="btn-row">
-            <button class="btn btn-primary" onclick="startGame()">▶ 开始环节</button>
-            <button class="btn btn-warning" onclick="endGame()">⏸ 结束环节</button>
-            <button class="btn btn-danger" onclick="resetGame()">🔄 重置游戏</button>
+            <button class="btn btn-primary" onclick="app.startGame()">▶ 开始环节</button>
+            <button class="btn btn-warning" onclick="app.endGame()">⏸ 结束环节</button>
+            <button class="btn btn-danger" onclick="app.resetGame()">🔄 重置游戏</button>
         </div>
     </div>
-
     <div class="section">
-        <div class="section-title">📹 视频控制</div>
-        <div class="btn-row">
-            <button class="btn btn-secondary" onclick="playVideo('intro_video.mp4')">▶ 开场视频</button>
-        </div>
+        <div class="section-title">⚡ 抢答加分（点击队伍加分，自动 TTS 播报）</div>
+        <div id="gameTeamGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;"></div>
     </div>
 </div>
 
-<!-- ===== Tab 5: AI 对话（预留） ===== -->
+<!-- Tab 5: AI 语音对话 -->
 <div class="tab-content" id="tab-ai">
-    <div class="section" style="text-align:center; padding-top:40px;">
-        <div style="font-size:60px; margin-bottom:20px;">🤖</div>
-        <div style="font-size:20px; font-weight:bold; margin-bottom:10px;">AI 实时语音对话</div>
-        <div style="font-size:14px; opacity:0.6; max-width:300px; margin:0 auto; line-height:1.8;">
-            此功能正在开发中，后续将支持 AI 主持、智能问答、实时语音对话等功能，敬请期待。
+    <div class="section">
+        <div class="section-title">🤖 AI 语音对话</div>
+        <div class="card" style="max-height:250px; overflow-y:auto;" id="aiChatHistory">
+            <div style="text-align:center; opacity:0.5; padding:20px; font-size:13px;" id="aiChatEmpty">开始与 AI 对话吧！</div>
+        </div>
+        <div class="card">
+            <div style="font-size:13px; opacity:0.7; margin-bottom:8px;">输入问题</div>
+            <div class="input-group">
+                <input class="input" id="aiQuestionInput" placeholder="输入你想问的问题..." onkeydown="if(event.key==='Enter')app.askAI()">
+                <button class="btn btn-primary" onclick="app.askAI()" style="white-space:nowrap;">发送</button>
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-secondary" id="aiVoiceBtn" onclick="app.toggleVoiceInput()" style="flex:1;">🎤 按住说话</button>
+            <button class="btn btn-secondary" onclick="app.clearAIChat()" style="flex:0;">🗑 清空</button>
         </div>
     </div>
 </div>
 
-<!-- Toast 提示 -->
 <div class="toast" id="toast"></div>
+<div class="demo-link">演示页面: <a href="/slides.html" target="_blank">点击打开</a></div>
 
-<!-- 演示页面链接 -->
-<div class="demo-link">
-    演示页面: <a href="slides.html" target="_blank">点击打开</a>
-</div>
-
-<!-- QR Code Library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-
+<script src="/static/js/ws-client.js"></script>
+<script src="/static/js/slide-store.js"></script>
 <script>
-    // ==================== WebSocket 连接 ====================
-    let ws = null;
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 20;
+    (function() {
+        const app = {
+            store: new SlideStore(),
+            teamsCache: [],
+            gameTeams: ['A队', 'B队', 'C队', 'D队'],
+            teamColors: { 'A队': '#e74c3c', 'B队': '#2ecc71', 'C队': '#f39c12', 'D队': '#3498db' },
 
-    function connect() {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
-        console.log('连接 WebSocket:', wsUrl);
+            init: function() {
+                const self = this;
 
-        ws = new WebSocket(wsUrl);
+                this.store.onCurrentSlideChange = function(slideId, position, total) {
+                    document.getElementById('currentPage').textContent = position;
+                    document.getElementById('currentSlideDisplay').textContent = position;
+                    document.getElementById('totalPages').textContent = total;
+                    document.getElementById('jumpInput').max = total;
+                };
 
-        ws.onopen = function() {
-            console.log('✅ WebSocket 连接成功');
-            reconnectAttempts = 0;
-            updateStatus(true);
-        };
+                this.store.onConnectionStatusChange = function(status) {
+                    const dot = document.getElementById('statusDot');
+                    const text = document.getElementById('statusText');
+                    dot.classList.toggle('connected', status === 'connected');
+                    text.textContent = status === 'connected' ? '已连接' : '未连接';
+                };
 
-        ws.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            handleMessage(data);
-        };
+                this.store.ws.on('clients_count', function(data) {
+                    document.getElementById('clientCount').textContent = data.count;
+                });
 
-        ws.onclose = function() {
-            console.log('❌ WebSocket 连接断开');
-            updateStatus(false);
-            attemptReconnect();
-        };
+                this.store.ws.on('score_board', function(data) {
+                    self.teamsCache = data.teams || [];
+                    self.renderScoreBoard(self.teamsCache);
+                    self.renderLeaderboard(self.teamsCache);
+                    self.renderGameTeamGrid(self.teamsCache);
+                });
 
-        ws.onerror = function(error) {
-            console.error('WebSocket 错误:', error);
-        };
-    }
+                this.store.ws.on('score_update', function(data) {
+                    self.updateSingleScore(data.team_name, data.score);
+                });
 
-    function attemptReconnect() {
-        if (reconnectAttempts < maxReconnectAttempts) {
-            reconnectAttempts++;
-            setTimeout(connect, 2000);
-        }
-    }
+                this.store.ws.on('score_set', function(data) {
+                    self.updateSingleScore(data.team_name, data.score);
+                });
 
-    function updateStatus(connected) {
-        const dot = document.getElementById('statusDot');
-        const text = document.getElementById('statusText');
-        dot.classList.toggle('connected', connected);
-        text.textContent = connected ? '已连接' : '未连接';
-    }
+                this.store.ws.on('score_reset', function(data) {
+                    self.teamsCache = data.teams || [];
+                    self.renderScoreBoard(self.teamsCache);
+                    self.renderLeaderboard(self.teamsCache);
+                    self.renderGameTeamGrid(self.teamsCache);
+                });
 
-    // ==================== 消息处理 ====================
-    function handleMessage(data) {
-        switch(data.type) {
-            case 'state':
-                updatePageDisplay(data.slide);
-                document.getElementById('clientCount').textContent = data.clients;
-                break;
+                this.store.ws.on('game_control', function(data) {
+                    self.handleGameControl(data);
+                });
 
-            case 'goto':
-                updatePageDisplay(data.slide);
-                break;
+                this.store.ws.on('ai_answer', function(data) {
+                    self.handleAIResponse(data);
+                });
 
-            case 'sync':
-                updatePageDisplay(data.slide);
-                break;
+                this.store.ws.on('ai_voice_status', function(data) {
+                    if (data.message) self.showToast(data.message);
+                });
 
-            case 'first':
-                updatePageDisplay('1');
-                break;
+                this.store.init().then(function() {
+                    self.updateQuickPages();
+                    self.requestScores();
+                });
 
-            case 'last':
-                updatePageDisplay('66');
-                break;
+                this.bindTabs();
+                this.bindKeyboard();
+                this.generateQR();
+            },
 
-            case 'clients_count':
-                document.getElementById('clientCount').textContent = data.count;
-                break;
-
-            // 游戏积分
-            case 'score_update':
-                updateSingleScore(data.team_name, data.score);
-                break;
-
-            case 'score_set':
-                updateSingleScore(data.team_name, data.score);
-                break;
-
-            case 'score_board':
-                renderScoreBoard(data.teams);
-                if (data.leaderboard) {
-                    renderLeaderboard(data.teams);
+            // ---- 导航 ----
+            next: function() { this.store.next(); },
+            prev: function() { this.store.prev(); },
+            first: function() { this.store.first(); },
+            last: function() { this.store.last(); },
+            jumpTo: function(page) {
+                if (page === undefined) page = document.getElementById('jumpInput').value;
+                if (page) {
+                    this.store.gotoPosition(parseInt(page));
+                    document.getElementById('jumpInput').value = '';
                 }
-                break;
+            },
+            toggleFullscreen: function() { this.store.toggleFullscreen(); },
+            replayVideo: function() { this.store.replayVideo(); },
 
-            case 'score_reset':
-                if (data.teams) {
-                    renderScoreBoard(data.teams);
-                    renderLeaderboard(data.teams);
+            updateQuickPages: function() {
+                const container = document.getElementById('quickPages');
+                const slides = this.store.slides;
+                // 按章节生成入口
+                const seenChapters = new Set();
+                const buttons = [];
+                slides.forEach(function(s, idx) {
+                    if (s.chapter && !seenChapters.has(s.chapter)) {
+                        seenChapters.add(s.chapter);
+                        buttons.push('<button class="quick-page-btn" onclick="app.jumpTo(' + (idx + 1) + ')">' + s.chapter + '</button>');
+                    }
+                });
+                container.innerHTML = buttons.join('');
+            },
+
+            // ---- 积分 ----
+            requestScores: function() { this.store.send({ type: 'score_get' }); },
+            requestLeaderboard: function() { this.store.send({ type: 'score_leaderboard' }); },
+            updateScore: function(teamName, delta, autoTts) {
+                this.store.send({ type: 'score_update', team_name: teamName, delta: delta, auto_tts: autoTts || false });
+            },
+            updateSingleScore: function(teamName, score) {
+                const idx = this.teamsCache.findIndex(function(t) { return t.team_name === teamName; });
+                if (idx >= 0) this.teamsCache[idx].score = score;
+                this.renderScoreBoard(this.teamsCache);
+                this.renderLeaderboard(this.teamsCache);
+                this.renderGameTeamGrid(this.teamsCache);
+            },
+            customScore: function(teamName) {
+                const input = prompt('输入 ' + teamName + ' 的加减分数', '0');
+                if (input !== null) {
+                    const delta = parseInt(input);
+                    if (!isNaN(delta)) this.updateScore(teamName, delta, false);
                 }
-                break;
+            },
+            resetAllScores: function() {
+                if (confirm('确认重置所有队伍积分？')) {
+                    this.store.send({ type: 'score_reset' });
+                    this.showToast('积分已重置');
+                }
+            },
+            renderScoreBoard: function(teams) {
+                this.teamsCache = teams || [];
+                const container = document.getElementById('scoreList');
+                if (!teams || teams.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; opacity:0.5; padding:20px;">暂无队伍数据</div>';
+                    return;
+                }
+                const self = this;
+                container.innerHTML = teams.map(function(t) {
+                    return '<div class="score-team"><div class="name">' + t.team_name + '</div>' +
+                        '<div class="score" id="score-' + t.team_name + '">' + t.score + '</div>' +
+                        '<div class="score-actions">' +
+                        '<button class="btn-score-add" onclick="app.updateScore(\'' + t.team_name + '\', 10, true)" title="加10分">+10</button>' +
+                        '<button class="btn-score-add" onclick="app.updateScore(\'' + t.team_name + '\', 5, false)" title="加5分">+5</button>' +
+                        '<button class="btn-score-sub" onclick="app.updateScore(\'' + t.team_name + '\', -5, false)" title="减5分">-5</button>' +
+                        '<button class="btn-score-sub" onclick="app.updateScore(\'' + t.team_name + '\', -10, false)" title="减10分">-10</button>' +
+                        '<button class="btn-score-custom" onclick="app.customScore(\'' + t.team_name + '\')" title="自定义">✏️</button>' +
+                        '</div></div>';
+                }).join('');
+            },
+            renderLeaderboard: function(teams) {
+                const container = document.getElementById('leaderboardList');
+                if (!teams || teams.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; opacity:0.5; padding:20px;">暂无数据</div>';
+                    return;
+                }
+                const sorted = teams.slice().sort(function(a, b) { return b.score - a.score; });
+                container.innerHTML = sorted.map(function(t, i) {
+                    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+                    return '<div class="leaderboard-item"><div class="rank ' + rankClass + '">' + (i + 1) + '</div><div style="flex:1; font-weight:bold;">' + t.team_name + '</div><div style="font-size:18px; font-weight:bold;">' + t.score + '</div></div>';
+                }).join('');
+            },
+            renderGameTeamGrid: function(teams) {
+                const grid = document.getElementById('gameTeamGrid');
+                if (!grid) return;
+                const scoreMap = {};
+                (teams || []).forEach(function(t) { scoreMap[t.team_name] = t.score; });
+                const self = this;
+                grid.innerHTML = this.gameTeams.map(function(tname) {
+                    const score = scoreMap[tname] || 0;
+                    const color = self.teamColors[tname] || '#003366';
+                    return '<div style="background:rgba(255,255,255,0.08); border-radius:12px; padding:12px; text-align:center; border:2px solid ' + color + '40;">' +
+                        '<div style="font-size:24px; font-weight:bold; color:' + color + '; margin-bottom:4px;">' + tname + '</div>' +
+                        '<div style="font-size:36px; font-weight:bold; margin:8px 0; color:white;" id="gameScore-' + tname + '">' + score + '</div>' +
+                        '<div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">' +
+                        '<button class="btn-score-add" style="width:44px; height:44px; font-size:20px; border-radius:50%; background:' + color + ';" onclick="app.gameScore(\'' + tname + '\', 1)" title="加1分">+1</button>' +
+                        '<button class="btn-score-add" style="width:44px; height:44px; font-size:20px; border-radius:50%; background:' + color + ';" onclick="app.gameScore(\'' + tname + '\', 2)" title="加2分">+2</button>' +
+                        '<button class="btn-score-add" style="width:44px; height:44px; font-size:20px; border-radius:50%; background:' + color + ';" onclick="app.gameScore(\'' + tname + '\', 5)" title="加5分">+5</button>' +
+                        '<button class="btn-score-add" style="width:44px; height:44px; font-size:20px; border-radius:50%; background:' + color + ';" onclick="app.gameScore(\'' + tname + '\', 10)" title="加10分">+10</button>' +
+                        '<button class="btn-score-sub" style="width:44px; height:44px; font-size:20px; border-radius:50%;" onclick="app.gameScore(\'' + tname + '\', -1)" title="减1分">-1</button>' +
+                        '<button class="btn-score-sub" style="width:44px; height:44px; font-size:20px; border-radius:50%;" onclick="app.gameScore(\'' + tname + '\', -5)" title="减5分">-5</button>' +
+                        '</div></div>';
+                }).join('');
+            },
+            gameScore: function(teamName, delta) {
+                this.store.send({ type: 'score_update', team_name: teamName, delta: delta, auto_tts: true });
+                this.showToast('⚡ ' + teamName + ' ' + (delta > 0 ? '+' : '') + delta);
+            },
 
-            case 'game_control':
-                handleGameControl(data);
-                break;
-        }
-    }
+            // ---- TTS ----
+            setTtsText: function(text) { document.getElementById('ttsText').value = text; },
+            speakTts: function() {
+                const text = document.getElementById('ttsText').value.trim();
+                if (!text) { this.showToast('请输入播报内容'); return; }
+                this.store.send({ type: 'tts_speak', text: text, voice: '' });
+                this.showToast('📢 播报请求已发送');
+            },
+            stopTts: function() { this.store.send({ type: 'tts_stop' }); this.showToast('⏹ 播报已停止'); },
 
-    // ==================== 幻灯片控制 ====================
-    function updatePageDisplay(slide) {
-        let displayNum = slide;
-        if (slide === '1') displayNum = '1';
-        else if (slide === '1b') displayNum = '2';
-        else displayNum = slide;
-        document.getElementById('currentPage').textContent = displayNum;
-        document.getElementById('currentSlideDisplay').textContent = displayNum;
-    }
+            // ---- 游戏 ----
+            startGame: function() {
+                const name = document.getElementById('roundNameInput').value.trim() || '知识问答';
+                this.store.send({ type: 'game_control', action: 'start', round_name: name });
+                this.showToast('▶ 环节已开始: ' + name);
+            },
+            endGame: function() { this.store.send({ type: 'game_control', action: 'end' }); this.showToast('⏸ 环节已结束'); },
+            resetGame: function() {
+                if (confirm('确认重置游戏（将清除所有积分）？')) {
+                    this.store.send({ type: 'game_control', action: 'reset' });
+                    this.showToast('🔄 游戏已重置');
+                }
+            },
+            handleGameControl: function(data) {
+                const icon = document.getElementById('gameStatusIcon');
+                const text = document.getElementById('gameStatusText');
+                const name = document.getElementById('gameRoundName');
+                if (data.action === 'started') {
+                    icon.textContent = '▶'; text.textContent = '游戏进行中'; name.textContent = data.round_name || '';
+                } else if (data.action === 'ended') {
+                    icon.textContent = '⏹'; text.textContent = '游戏已结束'; name.textContent = '';
+                } else if (data.action === 'reset') {
+                    icon.textContent = '⏹'; text.textContent = '游戏未开始'; name.textContent = '';
+                }
+            },
 
-    function send(message) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(message));
-        }
-    }
+            // ---- AI ----
+            askAI: function() {
+                const input = document.getElementById('aiQuestionInput');
+                const text = input.value.trim();
+                if (!text) return;
+                this.addAIChatMessage('user', text);
+                input.value = '';
+                this.store.send({ type: 'ai_question', text: text });
+                this.addAIChatMessage('ai', '🤔 思考中...', true);
+            },
+            addAIChatMessage: function(role, text, isTemp) {
+                const history = document.getElementById('aiChatHistory');
+                const empty = document.getElementById('aiChatEmpty');
+                if (empty) empty.style.display = 'none';
+                if (isTemp) {
+                    const existing = history.querySelector('.ai-message.temp');
+                    if (existing) existing.remove();
+                }
+                const msg = document.createElement('div');
+                msg.className = 'ai-message ' + (isTemp ? 'temp' : '');
+                const isUser = role === 'user';
+                msg.style.cssText = 'display:flex; gap:8px; margin-bottom:10px;' + (isUser ? 'flex-direction:row-reverse;' : '') + 'align-items:flex-start;';
+                const avatar = isUser ? '👤' : '🤖';
+                const bgColor = isUser ? 'rgba(46,204,113,0.2)' : 'rgba(255,255,255,0.08)';
+                msg.innerHTML = '<div style="font-size:20px; flex-shrink:0;">' + avatar + '</div>' +
+                    '<div style="background:' + bgColor + '; padding:10px 14px; border-radius:10px; font-size:13px; line-height:1.6; max-width:85%; word-break:break-word;">' + text + '</div>';
+                history.appendChild(msg);
+                history.scrollTop = history.scrollHeight;
+            },
+            clearAIChat: function() {
+                document.getElementById('aiChatHistory').innerHTML = '<div style="text-align:center; opacity:0.5; padding:20px; font-size:13px;" id="aiChatEmpty">开始与 AI 对话吧！</div>';
+            },
+            handleAIResponse: function(data) {
+                const history = document.getElementById('aiChatHistory');
+                const temp = history.querySelector('.ai-message.temp');
+                if (temp) temp.remove();
+                if (data.text) this.addAIChatMessage('ai', data.text);
+            },
+            toggleVoiceInput: function() {
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    this.showToast('⚠ 您的浏览器不支持语音识别，请使用 Chrome'); return;
+                }
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'zh-CN'; recognition.continuous = false; recognition.interimResults = false;
+                const btn = document.getElementById('aiVoiceBtn');
+                const self = this;
+                btn.textContent = '🎤 录音中...'; btn.style.background = 'rgba(231,76,60,0.4)';
+                recognition.onresult = function(event) {
+                    document.getElementById('aiQuestionInput').value = event.results[0][0].transcript;
+                    self.askAI(); btn.textContent = '🎤 按住说话'; btn.style.background = '';
+                };
+                recognition.onerror = function() { self.showToast('⚠ 语音识别失败，请重试'); btn.textContent = '🎤 按住说话'; btn.style.background = ''; };
+                recognition.onend = function() { btn.textContent = '🎤 按住说话'; btn.style.background = ''; };
+                recognition.start();
+            },
 
-    function goNext() { send({ type: 'next' }); }
-    function goPrev() { send({ type: 'prev' }); }
-    function goFirst() { send({ type: 'first' }); }
-    function goLast() { send({ type: 'last' }); }
-
-    function jumpTo(page) {
-        if (page === undefined) {
-            page = document.getElementById('jumpInput').value;
-        }
-        if (page) {
-            send({ type: 'goto', slide: String(page) });
-            document.getElementById('jumpInput').value = '';
-        }
-    }
-
-    function toggleFullscreen() { send({ type: 'fullscreen' }); }
-    function toggleVideo() { send({ type: 'replay_video' }); }
-
-    // ==================== 积分管理 ====================
-    let teamsCache = [];
-
-    function requestScores() {
-        send({ type: 'score_get' });
-    }
-
-    function requestLeaderboard() {
-        send({ type: 'score_leaderboard' });
-    }
-
-    function updateScore(teamName, delta, autoTts) {
-        send({
-            type: 'score_update',
-            team_name: teamName,
-            delta: delta,
-            auto_tts: autoTts || false,
-        });
-    }
-
-    function updateSingleScore(teamName, score) {
-        // Update cache
-        const idx = teamsCache.findIndex(t => t.team_name === teamName);
-        if (idx >= 0) {
-            teamsCache[idx].score = score;
-        }
-        renderScoreBoard(teamsCache);
-        renderLeaderboard(teamsCache);
-    }
-
-    function customScore(teamName) {
-        const input = prompt(`输入 ${teamName} 的新分数（正负数均可，当前为加减操作）`, '0');
-        if (input !== null) {
-            const delta = parseInt(input);
-            if (!isNaN(delta)) {
-                updateScore(teamName, delta, false);
+            // ---- 通用 ----
+            bindTabs: function() {
+                document.addEventListener('click', function(e) {
+                    const tabBtn = e.target.closest('.tab-btn');
+                    if (!tabBtn) return;
+                    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+                    tabBtn.classList.add('active');
+                    document.getElementById('tab-' + tabBtn.dataset.tab).classList.add('active');
+                    if (tabBtn.dataset.tab === 'scores') app.requestScores();
+                });
+            },
+            bindKeyboard: function() {
+                document.addEventListener('keydown', function(e) {
+                    switch(e.key) {
+                        case 'ArrowRight': case ' ': e.preventDefault(); app.next(); break;
+                        case 'ArrowLeft': e.preventDefault(); app.prev(); break;
+                        case 'Home': e.preventDefault(); app.first(); break;
+                        case 'End': e.preventDefault(); app.last(); break;
+                    }
+                });
+            },
+            generateQR: function() {
+                const url = window.location.href;
+                const canvas = document.getElementById('qrcode');
+                if (typeof QRCode !== 'undefined') {
+                    QRCode.toCanvas(canvas, url, { width: 100, margin: 1, color: { dark: '#003366', light: '#ffffff' } }, function(error) {
+                        if (error) console.error('二维码生成失败:', error);
+                    });
+                }
+            },
+            showToast: function(message) {
+                const el = document.getElementById('toast');
+                el.textContent = message;
+                el.classList.add('show');
+                clearTimeout(this.toastTimer);
+                this.toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2000);
             }
-        }
-    }
+        };
 
-    function resetAllScores() {
-        if (confirm('确认重置所有队伍积分？')) {
-            send({ type: 'score_reset' });
-            showToast('积分已重置');
-        }
-    }
-
-    function renderScoreBoard(teams) {
-        teamsCache = teams || [];
-        const container = document.getElementById('scoreList');
-        if (!teams || teams.length === 0) {
-            container.innerHTML = '<div style="text-align:center; opacity:0.5; padding:20px;">暂无队伍数据</div>';
-            return;
-        }
-
-        container.innerHTML = teams.map(t => `
-            <div class="score-team">
-                <div class="name">${t.team_name}</div>
-                <div class="score" id="score-${t.team_name}">${t.score}</div>
-                <div class="score-actions">
-                    <button class="btn-score-add" onclick="updateScore('${t.team_name}', 10, true)" title="加10分">+10</button>
-                    <button class="btn-score-add" onclick="updateScore('${t.team_name}', 5, false)" title="加5分">+5</button>
-                    <button class="btn-score-sub" onclick="updateScore('${t.team_name}', -5, false)" title="减5分">-5</button>
-                    <button class="btn-score-sub" onclick="updateScore('${t.team_name}', -10, false)" title="减10分">-10</button>
-                    <button class="btn-score-custom" onclick="customScore('${t.team_name}')" title="自定义">✏️</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function renderLeaderboard(teams) {
-        const container = document.getElementById('leaderboardList');
-        if (!teams || teams.length === 0) {
-            container.innerHTML = '<div style="text-align:center; opacity:0.5; padding:20px;">暂无数据</div>';
-            return;
-        }
-
-        // Sort by score descending
-        const sorted = [...teams].sort((a, b) => b.score - a.score);
-
-        container.innerHTML = sorted.map((t, i) => {
-            const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
-            return `
-                <div class="leaderboard-item">
-                    <div class="rank ${rankClass}">${i + 1}</div>
-                    <div style="flex:1; font-weight:bold;">${t.team_name}</div>
-                    <div style="font-size:18px; font-weight:bold;">${t.score}</div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    // ==================== TTS 语音播报 ====================
-    function setTtsText(text) {
-        document.getElementById('ttsText').value = text;
-    }
-
-    function speakTts() {
-        const text = document.getElementById('ttsText').value.trim();
-        if (!text) {
-            showToast('请输入播报内容');
-            return;
-        }
-        send({ type: 'tts_speak', text: text, voice: '' });
-        showToast('📢 播报请求已发送');
-    }
-
-    function stopTts() {
-        send({ type: 'tts_stop' });
-        showToast('⏹ 播报已停止');
-    }
-
-    // ==================== 游戏控制 ====================
-    function startGame() {
-        const name = document.getElementById('roundNameInput').value.trim() || '知识问答';
-        send({ type: 'game_control', action: 'start', round_name: name });
-        showToast(`▶ 环节已开始: ${name}`);
-    }
-
-    function endGame() {
-        send({ type: 'game_control', action: 'end' });
-        showToast('⏸ 环节已结束');
-    }
-
-    function resetGame() {
-        if (confirm('确认重置游戏（将清除所有积分）？')) {
-            send({ type: 'game_control', action: 'reset' });
-            showToast('🔄 游戏已重置');
-        }
-    }
-
-    function handleGameControl(data) {
-        const icon = document.getElementById('gameStatusIcon');
-        const text = document.getElementById('gameStatusText');
-        const name = document.getElementById('gameRoundName');
-
-        if (data.action === 'started') {
-            icon.textContent = '▶';
-            text.textContent = '游戏进行中';
-            name.textContent = data.round_name || '';
-        } else if (data.action === 'ended') {
-            icon.textContent = '⏹';
-            text.textContent = '游戏已结束';
-            name.textContent = '';
-        } else if (data.action === 'reset') {
-            icon.textContent = '⏹';
-            text.textContent = '游戏未开始';
-            name.textContent = '';
-        }
-    }
-
-    // ==================== 视频控制 ====================
-    function playVideo(videoFile) {
-        send({ type: 'video_play', file: videoFile });
-        showToast(`▶ 播放视频: ${videoFile}`);
-    }
-
-    // ==================== 二维码 ====================
-    function generateQR() {
-        const url = window.location.href;
-        const canvas = document.getElementById('qrcode');
-        if (typeof QRCode !== 'undefined') {
-            QRCode.toCanvas(canvas, url, {
-                width: 100, margin: 1,
-                color: { dark: '#003366', light: '#ffffff' }
-            }, function(error) {
-                if (error) console.error('二维码生成失败:', error);
-            });
-        }
-    }
-
-    // ==================== Toast 提示 ====================
-    let toastTimer = null;
-
-    function showToast(message) {
-        const el = document.getElementById('toast');
-        el.textContent = message;
-        el.classList.add('show');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
-    }
-
-    // ==================== Tab 切换 ====================
-    document.addEventListener('click', function(e) {
-        const tabBtn = e.target.closest('.tab-btn');
-        if (!tabBtn) return;
-
-        // 切换 Tab
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        tabBtn.classList.add('active');
-        document.getElementById('tab-' + tabBtn.dataset.tab).classList.add('active');
-
-        // 切换到积分 Tab 时自动刷新
-        if (tabBtn.dataset.tab === 'scores') {
-            requestScores();
-        }
-    });
-
-    // ==================== 键盘快捷键 ====================
-    document.addEventListener('keydown', function(e) {
-        switch(e.key) {
-            case 'ArrowRight':
-            case ' ':
-                e.preventDefault(); goNext(); break;
-            case 'ArrowLeft':
-                e.preventDefault(); goPrev(); break;
-            case 'Home':
-                e.preventDefault(); goFirst(); break;
-            case 'End':
-                e.preventDefault(); goLast(); break;
-        }
-    });
-
-    // ==================== 初始化 ====================
-    connect();
-    generateQR();
-
-    // 页面加载后自动请求积分
-    setTimeout(() => requestScores(), 1000);
+        window.app = app;
+        app.init();
+    })();
 </script>
 </body>
 </html>
