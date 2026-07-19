@@ -4,4 +4,21 @@ __pycache__/
 data/
 audio/
 static/uploads/
+
+# 本地运行/调试产物
 .env
+server.log
+server.err.log
+static/ocr_output/
+*.bak
+
+# 本地大文件与种子源
+temp.pptx
+
+# 本地调试/一次性脚本（按需保留本地，不入库）
+debug_*.py
+check_html.py
+fix_dataslide.py
+test_p0_verify.py
+verify_phase_d.py
+check_editor.py

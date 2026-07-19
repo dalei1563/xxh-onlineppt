@@ -6,11 +6,59 @@
     <title>2026年7月线下学习会 - AI主持演示</title>
     <link rel="stylesheet" href="/static/editor-style.css">
     <link rel="stylesheet" href="/static/css/slides.css">
+    <style>
+        /* ===== 16:9 固定比例显示模式 =====
+           改为 iframe 方案后，#slides-frame 自身按 100%×100% 撑满 .presentation；
+           16:9 模式只控制 .presentation 的宽高比例，iframe 跟随。 */
+        .presentation {
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+        .presentation.mode-16-9 {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+        .presentation.mode-16-9 .slide-frame-wrap {
+            width: min(100vw, 177.78vh) !important;  /* 100vh * 16/9 */
+            height: min(56.25vw, 100vh) !important;  /* 100vw * 9/16 */
+        }
+        .presentation.mode-16-9 .control-bar,
+        .presentation.mode-16-9 .progress-bar {
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            max-width: min(100vw, 177.78vh) !important;
+        }
+
+        /* ---- iframe 主播放器 ----
+           每张 slide 是独立 HTML 文档（/api/slides/<id>/page），iframe 把它隔离加载，
+           再由 .slide-frame-wrap 控制显式比例。彻底避免单张 slide HTML 出错污染整页
+           的问题；同时让 slide 的 CSS / DOM 完全封装，不再与外层共用一份样式表。
+        */
+        .slide-frame-wrap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+        .slide-frame-wrap #__slideFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            background: #000;
+        }
+    </style>
 </head>
 <body>
     <div class="presentation" id="presentation">
-        <div id="slides-container">
-            <!-- 幻灯片由 JS 动态加载 -->
+        <div class="slide-frame-wrap">
+            <iframe id="__slideFrame" title="当前幻灯片" referrerpolicy="no-referrer"></iframe>
         </div>
     </div>
 
@@ -45,6 +93,15 @@
         </div>
     </div>
 
+    <!-- 取消静音浮层 -->
+    <div class="unmute-overlay" id="unmuteOverlay">
+        <div class="unmute-btn" id="unmuteBtn">
+            <span class="icon">🔊</span>
+            <span>点击开启声音</span>
+            <span class="hint">点击任意位置播放视频</span>
+        </div>
+    </div>
+
     <script src="/static/js/ws-client.js"></script>
     <script src="/static/js/slide-store.js"></script>
     <script>
@@ -55,25 +112,26 @@
 
             const app = {
                 store: new SlideStore(),
-                container: document.getElementById('slides-container'),
+                slideFrame: document.getElementById('__slideFrame'),
                 gameScoreboardVisible: false,
                 lastTeamScores: {},
+                _currentFrameSlideId: '',
+                _currentFrameHasVideo: false,
 
                 init: function() {
                     if (isPreviewMode) {
                         document.body.classList.add('preview-mode');
-                        this.loadSingleSlide(previewId);
+                        this.showSlide(previewId);
                         return;
                     }
 
                     const self = this;
 
-                    this.loadFullSlides().then(function() {
-                        self.store.init().then(function() {
-                            self.showSlide(self.store.currentSlideId);
-                            self.updatePageInfo();
-                            self.bindVideoEvents();
-                        });
+                    // 先连接 WS，等收到 presentation_state 后再切到对应 slide
+                    this.store.init().then(function() {
+                        self.showSlide(self.store.currentSlideId);
+                        self.updatePageInfo();
+                        self.bindVideoEvents();
                     });
 
                     this.store.onCurrentSlideChange = function(slideId, position, total) {
@@ -81,12 +139,17 @@
                         self.updatePageInfo();
                     };
 
-                    this.store.onSlidesReordered = function() { self.reloadSlides(); };
-                    this.store.onSlideCreated = function() { self.reloadSlides(); };
+                    // iframe 方案下结构性变更（reorder/create/delete/update）不再需要 reload 整页：
+                    // 我们对每张 slide 只在切到它时按需重新拉一次 iframe。当前正在显示的 slide
+                    // 被 update 时需要主动刷新一次 iframe。
+                    this.store.onSlidesReordered = function() { /* iframe 已按当前 slide_id 渲染，无需操作 */ };
+                    this.store.onSlideCreated = function() {};
                     this.store.onSlideUpdated = function(slide) {
-                        if (self.store.currentSlideId === slide.slide_id) self.reloadSingleSlide(slide.slide_id);
+                        if (self.store.currentSlideId === slide.slide_id) self.showSlide(slide.slide_id, /*force*/ true);
                     };
-                    this.store.onSlideDeleted = function() { self.reloadSlides(); };
+                    this.store.onSlideDeleted = function() {
+                        // 删除当前页时 presentation_state 已切到首张/相邻页，onCurrentSlideChange 会接管
+                    };
 
                     this.store.onConnectionStatusChange = function(status) {
                         self.showConnectionStatus(status === 'connected');
@@ -97,6 +160,7 @@
                     };
 
                     this.bindDirectWsEvents();
+                    this.bindFrameMessages();
                     this.bindKeyboard();
                     this.bindMouseWheel();
                 },
@@ -117,65 +181,57 @@
                     this.store.ws.on('score_reset', function() { self.hideScoreboardPanel(); });
                     this.store.ws.on('game_control', function(data) { self.showGameStatus(data); });
                     this.store.ws.on('ai_answer', function(data) { self.showAIResponse(data.text); });
+                    this.store.ws.on('display_mode', function(data) { self.setDisplayMode(data.mode); });
                 },
 
-                loadFullSlides: function() {
+                // iframe → 外层 消息桥接：state（含 hasVideo，与 /api/slides/<id>/page 端点协议一致）、video_ended
+                bindFrameMessages: function() {
                     const self = this;
-                    return fetch('/api/slides/full')
-                        .then(function(res) { return res.text(); })
-                        .then(function(html) { self.container.innerHTML = html; })
-                        .catch(function(err) {
-                            console.error('Failed to load slides:', err);
-                            self.container.innerHTML = '<div class="slide template-white active"><div class="content"><p>加载幻灯片失败</p></div></div>';
-                        });
-                },
-
-                reloadSlides: function() {
-                    const self = this;
-                    return this.loadFullSlides().then(function() {
-                        self.showSlide(self.store.currentSlideId);
-                        self.bindVideoEvents();
+                    window.addEventListener('message', function(ev) {
+                        // 只接收同源 message（/api/slides 跟本页同源）
+                        if (ev.origin !== window.location.origin) return;
+                        var msg = ev.data || {};
+                        if (msg.type === 'state') {
+                            self._currentFrameHasVideo = !!msg.hasVideo;
+                            self._checkAudioUnlock();
+                            // 用户已经解锁过音频 → 后续切到的任何视频页都应自动取消静音
+                            if (window.audioUnlocked && self._currentFrameHasVideo) {
+                                try {
+                                    self.slideFrame.contentWindow.postMessage({ type: 'unmute' }, window.location.origin);
+                                } catch (e) {}
+                            }
+                        } else if (msg.type === 'video_ended') {
+                            // 当前页视频结束自动下一页
+                            app.next();
+                        }
                     });
                 },
 
-                loadSingleSlide: function(slideId) {
-                    const self = this;
-                    fetch('/api/slides/' + slideId + '/render')
-                        .then(function(res) { return res.text(); })
-                        .then(function(html) {
-                            self.container.innerHTML = html;
-                            self.showSlide(slideId);
-                        });
-                },
-
-                reloadSingleSlide: function(slideId) {
-                    const self = this;
-                    fetch('/api/slides/' + slideId + '/render')
-                        .then(function(res) { return res.text(); })
-                        .then(function(html) {
-                            const old = self.container.querySelector('[data-slide="' + slideId + '"]');
-                            const temp = document.createElement('div');
-                            temp.innerHTML = html;
-                            const neu = temp.firstElementChild;
-                            if (old && neu) {
-                                const wasActive = old.classList.contains('active');
-                                old.parentNode.replaceChild(neu, old);
-                                if (wasActive) neu.classList.add('active');
-                            } else {
-                                self.reloadSlides();
-                            }
-                        });
-                },
-
-                showSlide: function(slideId) {
+                showSlide: function(slideId, force) {
                     if (!slideId) return;
-                    const slides = this.container.querySelectorAll('.slide');
-                    slides.forEach(function(s) { s.classList.remove('active'); });
-                    const target = this.container.querySelector('[data-slide="' + slideId + '"]');
-                    if (target) {
-                        target.classList.add('active');
-                        this.handleVideoSlide(slideId);
-                    }
+                    // 切换 iframe src 即重新加载该 slide 的独立文档
+                    if (slideId === this._currentFrameSlideId && !force) return;
+                    this._currentFrameSlideId = slideId;
+                    this._currentFrameHasVideo = false;
+                    // 加 ?t= 避免相同 src 时浏览器复用缓存导致 onSlideUpdated 强制刷新不生效
+                    var sep = slideId.indexOf('?') >= 0 ? '&' : '?';
+                    this.slideFrame.src = '/api/slides/' + encodeURIComponent(slideId) + '/page' + (force ? sep + 't=' + Date.now() : '');
+                },
+
+                // 演示页 iframe load 完成后，iframe 内的 <script> 不会自动 postMessage 给 parent
+                // （我们保持 page 端 script 是只响应 parent 的 probe），由外层 onload 主动 probe。
+                // iframe src 改变 → onload 触发 → 探测当前 slide 是否含视频 → 决定是否显示 unmute。
+                _attachFrameOnloadProbe: function() {
+                    const self = this;
+                    if (this._frameOnloadBound) return;
+                    this._frameOnloadBound = true;
+                    this.slideFrame.addEventListener('load', function() {
+                        try {
+                            var cw = self.slideFrame.contentWindow;
+                            if (!cw) return;
+                            cw.postMessage({ type: 'probe' }, window.location.origin);
+                        } catch (e) { /* 跨域被阻断时安静忽略 */ }
+                    });
                 },
 
                 updatePageInfo: function() {
@@ -193,41 +249,37 @@
                     document.getElementById('lastBtn').disabled = idx >= total - 1;
                 },
 
-                handleVideoSlide: function(slideId) {
-                    const video = document.getElementById('introVideo');
+                _checkAudioUnlock: function() {
+                    // 切到一个含视频的 slide 时，若 user 还没解除静音，弹 unmute-overlay
+                    if (window.audioUnlocked) return;
                     const overlay = document.getElementById('unmuteOverlay');
-                    if (!video) return;
-                    const firstSlideId = this.store.slideOrder[0];
-                    if (slideId === firstSlideId) {
-                        video.currentTime = 0;
-                        if (window.audioUnlocked) {
-                            video.play().catch(function(){});
-                        } else if (overlay) {
-                            overlay.classList.add('show');
-                        }
-                    } else {
-                        video.pause();
-                        if (overlay) overlay.classList.remove('show');
-                    }
+                    if (!overlay) return;
+                    if (this._currentFrameHasVideo) overlay.classList.add('show');
+                    else overlay.classList.remove('show');
                 },
 
                 bindVideoEvents: function() {
-                    const video = document.getElementById('introVideo');
                     const overlay = document.getElementById('unmuteOverlay');
-                    if (!video || !overlay) return;
-
-                    video.addEventListener('ended', function() { app.next(); });
+                    if (!overlay) return;
+                    if (this._videoEventsBound) return;
+                    this._videoEventsBound = true;
 
                     function unlockAudio() {
-                        video.muted = false;
-                        video.play().catch(function(){});
-                        overlay.classList.remove('show');
                         window.audioUnlocked = true;
+                        overlay.classList.remove('show');
+                        // 把当前 iframe 内视频取消静音继续播
+                        try {
+                            var cw = app.slideFrame.contentWindow;
+                            if (cw) cw.postMessage({ type: 'unmute' }, window.location.origin);
+                        } catch (e) {}
                     }
 
                     overlay.addEventListener('click', unlockAudio);
                     const btn = document.getElementById('unmuteBtn');
                     if (btn) btn.addEventListener('click', function(e) { e.stopPropagation(); unlockAudio(); });
+
+                    // 同时把 iframe onload 探测挂上，每次切到含视频页时自动展示 unmute-overlay
+                    this._attachFrameOnloadProbe();
                 },
 
                 // ---- 导航与控制 ----
@@ -251,8 +303,21 @@
                 },
 
                 doReplayVideo: function() {
-                    this.first();
-                    this.sync();
+                    try {
+                        var cw = this.slideFrame.contentWindow;
+                        if (cw) cw.postMessage({ type: 'replay_video' }, window.location.origin);
+                    } catch (e) {}
+                },
+
+                // ---- Display Mode ----
+                setDisplayMode: function(mode) {
+                    const pres = document.getElementById('presentation');
+                    if (mode === '16-9') {
+                        pres.classList.add('mode-16-9');
+                    } else {
+                        pres.classList.remove('mode-16-9');
+                    }
+                    console.log('[Display] Mode:', mode);
                 },
 
                 // ---- TTS ----

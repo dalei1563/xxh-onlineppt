@@ -2,382 +2,1123 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GSP 学习会 - 幻灯片编辑器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSP 学习会 · 幻灯片编辑器</title>
     <script src="/static/sortable.min.js"></script>
-    <link rel="stylesheet" href="/static/css/slides.css">
-    <link rel="stylesheet" href="/static/editor-style.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; background: #f0f2f5; min-height: 100vh; color: #333; overflow: auto; }
-        .header { background: linear-gradient(135deg, #003366, #004d99); color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-        .header .logo { font-size: 20px; font-weight: bold; }
-        .header .subtitle { font-size: 12px; opacity: 0.7; }
-        .header .actions { display: flex; gap: 10px; }
-        .header .actions a { color: white; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; background: rgba(255,255,255,0.15); transition: background 0.2s; }
-        .header .actions a:hover { background: rgba(255,255,255,0.25); }
-        .status-bar { background: white; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e8e8e8; font-size: 13px; position: sticky; top: 60px; z-index: 99; }
-        .status-bar .info { color: #666; }
-        .status-bar .info strong { color: #003366; }
-        .save-btn { background: #2ecc71; color: white; border: none; padding: 8px 24px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-        .save-btn:hover { background: #27ae60; }
-        .save-btn:disabled { background: #bdc3c7; cursor: not-allowed; }
-        .add-btn { background: #003366; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-right: 8px; }
-        .add-btn:hover { background: #004d99; }
-        .editor-body { max-width: 1200px; margin: 0 auto; padding: 20px 24px 60px; }
-        .chapter-group { background: white; border-radius: 10px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
-        .chapter-header { padding: 14px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; transition: background 0.2s; border-bottom: 1px solid #f0f0f0; }
-        .chapter-header:hover { background: #fafafa; }
-        .chapter-header .toggle { font-size: 12px; color: #999; transition: transform 0.2s; width: 16px; text-align: center; }
-        .chapter-header .toggle.collapsed { transform: rotate(-90deg); }
-        .chapter-header .chapter-icon { font-size: 18px; }
-        .chapter-header .chapter-title { font-size: 15px; font-weight: bold; flex: 1; }
-        .chapter-header .chapter-count { font-size: 12px; color: #999; background: #f0f2f5; padding: 2px 10px; border-radius: 10px; }
-        .slide-grid { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 20px; min-height: 70px; transition: all 0.2s; }
-        .slide-grid.collapsed { display: none; }
-        .slide-card { width: 200px; background: white; border: 2px solid #e0e0e0; border-radius: 8px; cursor: grab; transition: all 0.2s; position: relative; user-select: none; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-        .slide-card:active { cursor: grabbing; }
-        .slide-card:hover { border-color: #003366; box-shadow: 0 3px 12px rgba(0,51,102,0.15); }
-        .slide-card.sortable-ghost { border-color: #2ecc71; background: #e8f8f0; opacity: 0.6; }
-        .slide-card.sortable-chosen { border-color: #003366; box-shadow: 0 4px 16px rgba(0,51,102,0.25); }
-        .slide-card .preview-wrapper { width: 100%; height: 112px; background: #000; overflow: hidden; position: relative; border-bottom: 1px solid #f0f0f0; }
-        .slide-card .preview-wrapper > .slide {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 1920px !important;
-            height: 1080px !important;
-            transform-origin: top left !important;
-            transform: scale(0.102) !important;
-            display: flex !important;
-            margin: 0 !important;
-            overflow: hidden !important;
-            animation: none !important;
-            opacity: 1 !important;
-            visibility: visible !important;
+        /* ===== CSS Variables ===== */
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-surface: #ffffff;
+            --bg-elevated: #f8fafc;
+            --bg-hover: #f1f5f9;
+            --bg-active: #f0fdf4;
+            --bg-card: #ffffff;
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --accent: #22c55e;
+            --accent-hover: #16a34a;
+            --accent-light: #f0fdf4;
+            --accent-border: #bbf7d0;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --danger-border: #fecaca;
+            --warning: #f59e0b;
+            --foreground: #0f172a;
+            --foreground-secondary: #475569;
+            --foreground-muted: #94a3b8;
+            --foreground-dim: #cbd5e1;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 18px;
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            --header-height: 56px;
+            --toolbar-height: 56px;
         }
-        .slide-card .card-footer { padding: 8px 10px; display: flex; align-items: center; gap: 6px; border-top: 1px solid #f0f0f0; background: #fafafa; }
-        .slide-card .card-footer .card-title { flex: 1; font-size: 12px; font-weight: bold; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .slide-card .card-footer .card-id { font-size: 10px; color: #999; background: #eee; padding: 1px 6px; border-radius: 4px; }
-        .slide-card .card-footer .btn-delete-mini { width: 24px; height: 24px; border: none; border-radius: 4px; background: transparent; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; opacity: 0.4; }
-        .slide-card:hover .card-footer .btn-delete-mini { opacity: 1; }
-        .slide-card .card-footer .btn-delete-mini:hover { background: #ffeaea; }
-        .empty-hint { width: 100%; text-align: center; color: #ccc; font-size: 13px; padding: 20px; }
-        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 10px 24px; border-radius: 8px; font-size: 14px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-        .toast.show { opacity: 1; }
-        @media (max-width: 768px) { .slide-card { width: calc(50% - 6px); } .header { flex-wrap: wrap; gap: 8px; } .header .logo { font-size: 16px; } .status-bar { flex-wrap: wrap; gap: 8px; } }
-        @media (max-width: 480px) { .slide-card { width: 100%; } }
+
+        /* ===== Reset ===== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: var(--font);
+            background: var(--bg-body);
+            color: var(--foreground);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ===== Header ===== */
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: var(--header-height);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+        .app-header .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .app-header .brand-icon {
+            width: 30px; height: 30px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: #fff;
+        }
+        .app-header .brand-text {
+            line-height: 1.2;
+        }
+        .app-header .brand-name {
+            font-size: 15px; font-weight: 700; color: var(--foreground);
+        }
+        .app-header .brand-sub {
+            font-size: 11px; color: var(--foreground-muted); font-weight: 500;
+        }
+        .app-header .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .app-header .header-actions a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--foreground-secondary);
+            transition: all var(--transition);
+        }
+        .app-header .header-actions a:hover {
+            background: var(--bg-hover);
+            color: var(--foreground);
+        }
+        .app-header .header-actions a svg {
+            width: 16px; height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* ===== Toolbar ===== */
+        .toolbar {
+            position: sticky;
+            top: var(--header-height);
+            z-index: 99;
+            height: var(--toolbar-height);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            gap: 12px;
+        }
+        .toolbar .stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--foreground-secondary);
+        }
+        .toolbar .stats strong {
+            color: var(--foreground);
+            font-weight: 700;
+        }
+        .toolbar .stats .divider {
+            width: 1px; height: 20px;
+            background: var(--border);
+        }
+        .toolbar .stats .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .toolbar .stats .status-indicator .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--foreground-dim);
+            transition: background var(--transition);
+        }
+        .toolbar .stats .status-indicator .dot.connected {
+            background: var(--accent);
+            box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+        }
+        .toolbar .stats .status-indicator .dot.disconnected {
+            background: var(--danger);
+        }
+        .toolbar .toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            white-space: nowrap;
+            min-height: 36px;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3); }
+        .btn-primary:disabled { background: var(--foreground-dim); cursor: not-allowed; box-shadow: none; }
+        .btn-secondary {
+            background: var(--bg-body);
+            color: var(--foreground-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--bg-hover); border-color: var(--border-hover); }
+        .btn-outline-accent {
+            background: transparent;
+            color: var(--accent);
+            border: 1.5px solid var(--accent);
+        }
+        .btn-outline-accent:hover { background: var(--accent-light); }
+        .btn-danger {
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid var(--danger-border);
+        }
+        .btn-danger:hover { background: #fee2e2; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; min-height: 30px; border-radius: 4px; }
+        .btn-ghost {
+            background: transparent;
+            color: var(--foreground-muted);
+            padding: 6px 10px;
+        }
+        .btn-ghost:hover { background: var(--bg-hover); color: var(--foreground); }
+        .btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; flex-shrink: 0; }
+        .btn-primary svg { stroke: #fff; }
+
+        /* ===== Editor Body ===== */
+        .editor-body {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+        }
+
+        /* ===== Chapter Section (group container for divider + cards) ===== */
+        .chapter-section {
+            margin-bottom: 12px;
+        }
+        .chapter-section:first-child {
+            margin-top: 0;
+        }
+
+        .chapter-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 2px 0 10px;
+            position: relative;
+        }
+        .chapter-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, var(--border), transparent);
+        }
+        .chapter-divider {
+            cursor: pointer;
+        }
+        .chapter-divider.selected .label {
+            color: var(--accent);
+        }
+        .chapter-divider.selected::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 4px;
+            bottom: 4px;
+            width: 3px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        .chapter-divider .label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--foreground-secondary);
+            white-space: nowrap;
+            flex-shrink: 0;
+            letter-spacing: 0.3px;
+        }
+        .chapter-divider .label .count {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--foreground-muted);
+            background: var(--bg-body);
+            padding: 0 10px;
+            border-radius: 10px;
+            line-height: 22px;
+        }
+        .chapter-divider .divider-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity var(--transition);
+            flex-shrink: 0;
+        }
+        .chapter-divider:hover .divider-actions {
+            opacity: 1;
+        }
+        .chapter-divider .divider-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--foreground-muted);
+            transition: all var(--transition);
+        }
+        .chapter-divider .divider-btn:hover {
+            background: var(--bg-hover);
+            color: var(--foreground);
+        }
+        .chapter-divider .divider-btn.danger:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+        .chapter-divider .divider-btn svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+        .chapter-divider .label .chapter-name-input {
+            font: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            color: inherit;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--accent);
+            outline: none;
+            padding: 0 4px;
+            min-width: 60px;
+            width: auto;
+        }
+
+        /* ===== Slide Grid (per chapter, connected via Sortable group) ===== */
+        .slide-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            min-height: 60px;
+        }
+
+        /* ===== Slide Card ===== */
+        .slide-card {
+            width: 210px;
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: grab;
+            transition: all var(--transition);
+            position: relative;
+            user-select: none;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+        .slide-card:active { cursor: grabbing; }
+        .slide-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
+            transform: translateY(-1px);
+        }
+        .slide-card.sortable-ghost {
+            border-color: var(--accent);
+            background: var(--accent-light);
+            opacity: 0.6;
+            box-shadow: 0 0 0 3px var(--accent-border);
+        }
+        .slide-card.sortable-chosen {
+            border-color: var(--accent);
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.2);
+            transform: scale(1.02);
+        }
+
+        .slide-card .card-preview {
+            width: 100%;
+            height: 118px;
+            background: #f0f2f5;
+            overflow: hidden;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+        }
+        .slide-card .card-preview iframe {
+            width: 1920px;
+            height: 1080px;
+            border: none;
+            transform-origin: top left;
+            transform: scale(0.108);
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        .slide-card .card-preview .preview-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--foreground-dim); font-size: 12px;
+        }
+
+        .slide-card .card-footer {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: var(--bg-surface);
+        }
+        .slide-card .card-footer .drag-handle {
+            color: var(--foreground-dim);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .slide-card .card-footer .drag-handle svg {
+            width: 14px; height: 14px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+        .slide-card .card-footer .card-title {
+            flex: 1;
+            min-width: 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--foreground);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .slide-card .card-footer .card-type {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--accent);
+            background: var(--accent-light);
+            padding: 1px 7px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            letter-spacing: 0.2px;
+            line-height: 18px;
+        }
+        .slide-card .card-footer .btn-delete {
+            width: 24px; height: 24px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--foreground-dim);
+            transition: all var(--transition);
+            opacity: 0;
+            flex-shrink: 0;
+        }
+        .slide-card:hover .card-footer .btn-delete { opacity: 1; }
+        .slide-card .card-footer .btn-delete:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+        .slide-card .card-footer .btn-delete svg {
+            width: 14px; height: 14px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* ===== File Upload ===== */
+        input[type="file"] { display: none; }
+
+        /* ===== Save Hint ===== */
+        .save-hint {
+            font-size: 12px;
+            font-weight: 600;
+            transition: all var(--transition);
+        }
+        .save-hint.unsaved {
+            color: var(--danger);
+        }
+        .save-hint.saved {
+            color: var(--accent);
+        }
+
+        /* ===== Toast ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--foreground);
+            color: #fff;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(10px) scale(0.95);
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: auto;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .toast.success { border-left: 3px solid var(--accent); }
+        .toast.error { border-left: 3px solid var(--danger); }
+
+        /* ===== Empty State ===== */
+        .editor-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--foreground-muted);
+        }
+        .editor-empty svg {
+            width: 48px; height: 48px;
+            stroke: var(--foreground-dim);
+            stroke-width: 1.5;
+            fill: none;
+            margin-bottom: 16px;
+        }
+        .editor-empty h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--foreground-secondary);
+            margin-bottom: 8px;
+        }
+        .editor-empty p {
+            font-size: 14px;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .app-header { padding: 0 16px; }
+            .toolbar { padding: 0 16px; flex-wrap: wrap; height: auto; min-height: var(--toolbar-height); padding-top: 8px; padding-bottom: 8px; }
+            .toolbar .stats { font-size: 12px; gap: 10px; flex-wrap: wrap; }
+            .editor-body { padding: 16px; }
+            .slide-card { width: calc(50% - 6px); }
+            .slide-card .card-preview { height: 100px; }
+            .slide-card .card-preview > .slide { transform: scale(0.09) !important; }
+            .header-actions a span { display: none; }
+        }
+        @media (max-width: 480px) {
+            .slide-card { width: 100%; }
+            .slide-card .card-preview { height: 140px; }
+            .slide-card .card-preview > .slide { transform: scale(0.12) !important; }
+            .toolbar .stats .divider { display: none; }
+        }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--foreground-dim); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--foreground-muted); }
     </style>
 </head>
 <body>
-<div class="header">
-    <div>
-        <div class="logo">📝 GSP 幻灯片编辑器</div>
-        <div class="subtitle">2026年7月线下学习会 · 拖拽调整顺序 · 上传视频/图片页</div>
+
+    <!-- ===== Header ===== -->
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-icon">G</div>
+            <div class="brand-text">
+                <div class="brand-name">幻灯片编辑器</div>
+                <div class="brand-sub">GSP 学习会 · 拖拽排序 · 上传媒体</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="/slides.html" target="_blank">
+                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <span>演示页</span>
+            </a>
+            <a href="/controller.html" target="_blank">
+                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span>控制台</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- ===== Toolbar ===== -->
+    <div class="toolbar">
+        <div class="stats">
+            <span>共 <strong id="totalSlides">0</strong> 页</span>
+            <span class="divider"></span>
+            <span><strong id="chapterCount">0</strong> 个章节</span>
+            <span class="divider"></span>
+            <span class="status-indicator">
+                <span class="dot" id="statusDot"></span>
+                <span id="statusText">连接中</span>
+            </span>
+            <span class="divider"></span>
+            <span class="save-hint" id="saveHint">✅ 已是最新顺序</span>
+        </div>
+        <div class="toolbar-actions">
+            <button class="btn btn-sm btn-secondary" onclick="triggerUpload('image')">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                插入图片
+            </button>
+            <button class="btn btn-sm btn-secondary" onclick="triggerUpload('video')">
+                <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                插入视频
+            </button>
+            <button class="btn btn-sm btn-outline-accent" onclick="createChapter()">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                新建章节
+            </button>
+        </div>
     </div>
-    <div class="actions">
-        <a href="/slides.html" target="_blank">🎬 演示页</a>
-        <a href="/controller.html" target="_blank">📱 控制台</a>
+
+    <!-- ===== Editor Body ===== -->
+    <div class="editor-body" id="editorBody">
+        <div class="editor-empty">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <h3>正在加载幻灯片数据...</h3>
+            <p>请稍候</p>
+        </div>
     </div>
-</div>
 
-<div class="status-bar">
-    <div class="info">
-        共 <strong id="totalSlides">0</strong> 页 ·
-        <span id="chapterCount">0</span> 个章节 ·
-        <span id="saveStatus" class="save-status"></span>
-    </div>
-    <div>
-        <span id="saveHint" style="font-size:12px;color:#999;margin-right:8px;"></span>
-        <button class="add-btn" id="addImageBtn" onclick="triggerUpload('image')">🖼️ 插入图片页</button>
-        <button class="add-btn" id="addVideoBtn" onclick="triggerUpload('video')">🎬 插入视频页</button>
-        <button class="save-btn" id="saveOrderBtn" onclick="saveAllChanges()" disabled>💾 保存排序</button>
-    </div>
-</div>
+    <!-- File Upload Inputs -->
+    <input type="file" id="imageInput" accept="image/*" onchange="handleFileUpload(this, 'image')">
+    <input type="file" id="videoInput" accept="video/*" onchange="handleFileUpload(this, 'video')">
 
-<div class="editor-body" id="editorBody">
-    <div style="text-align:center;padding:40px;color:#999;">
-        <div style="font-size:40px;margin-bottom:12px;">⏳</div>
-        <div>正在加载幻灯片数据...</div>
-    </div>
-</div>
+    <!-- ===== Toast ===== -->
+    <div class="toast-container" id="toastContainer"></div>
 
-<input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleFileUpload(this, 'image')">
-<input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleFileUpload(this, 'video')">
+    <!-- ===== Scripts ===== -->
+    <script src="/static/js/ws-client.js"></script>
+    <script src="/static/js/slide-store.js"></script>
+    <script>
+        (function() {
+            var slidesData = [];
+            var sortableInstances = [];
+            var selectedChapter = '';
+            var toastTimer = null;
 
-<div class="toast" id="toast"></div>
+            var TYPE_LABELS = {
+                'video': '🎬 视频', 'image': '🖼️ 图片', 'white': '📄 HTML',
+            };
 
-<script src="/static/js/ws-client.js"></script>
-<script src="/static/js/slide-store.js"></script>
-<script>
-    let slidesData = [];
-    let hasUnsortedOrder = false;
-    let sortableInstances = [];
-    let previewHtmlMap = {};  // slide_id -> 渲染后的 HTML
+            var store = new SlideStore();
 
-    const TYPE_ICONS = {
-        'video': '🎬', 'image': '🖼️', 'seating': '🪑', 'checkin': '📷', 'home': '🏠', 'home-bg': '🏞️',
-        'blue': '🔵', 'white': '📄', 'rules': '📋', 'ranking': '🏆',
-        'speaker': '🎤', 'chapter-fancy': '✨', 'quiz': '❓', 'ending': '🎉',
-        'content': '📄',
-    };
+            // 通过 onSlidesChange + 具体事件处理器保持 slidesData 同步
 
-    const store = new SlideStore();
+            store.onSlideCreated = function() {
+                showToast('新幻灯片已创建并同步', 'success');
+                // slidesData 和渲染由紧随其后的 onSlidesChange 处理
+            };
 
-    store.onSlidesChange = function(slides) {
-        slidesData = slides;
-        renderEditor();
-    };
+            store.onSlideUpdated = function(slide) {
+                // 更新单个卡片，不用全量渲染
+                var card = document.querySelector('.slide-card[data-slide-id="' + slide.slide_id + '"]');
+                if (card) {
+                    var titleEl = card.querySelector('.card-title');
+                    if (titleEl) titleEl.textContent = slide.title || '未命名';
+                }
+            };
 
-    store.onSlideCreated = function(slide) {
-        showToast('✅ 新幻灯片已创建并同步');
-    };
+            store.onSlideDeleted = function() {
+                // slidesData 和渲染由紧随其后的 onSlidesChange 处理
+            };
 
-    store.onConnectionStatusChange = function(status) {
-        document.getElementById('saveStatus').textContent = status === 'connected' ? '● 已连接' : '● 未连接';
-        document.getElementById('saveStatus').style.color = status === 'connected' ? '#27ae60' : '#e74c3c';
-    };
+            store.onSlidesReordered = null;
 
-    function init() {
-        Promise.all([
-            store.init(),
-            loadFullPreview()
-        ]).then(function() {
-            slidesData = store.slides;
-            renderEditor();
-        });
-    }
+            store.onSlidesChange = function(slides) {
+                slidesData = slides;
+            };
 
-    async function loadFullPreview() {
-        try {
-            const res = await fetch('/api/slides/full');
-            const html = await res.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            doc.querySelectorAll('.slide').forEach(function(el) {
-                const slideId = el.getAttribute('data-slide');
-                if (slideId) previewHtmlMap[slideId] = el.outerHTML;
-            });
-        } catch (e) {
-            console.warn('Failed to load full preview:', e);
-        }
-    }
+            store.onConnectionStatusChange = function(status) {
+                var dot = document.getElementById('statusDot');
+                var text = document.getElementById('statusText');
+                if (status === 'connected') {
+                    dot.className = 'dot connected';
+                    text.textContent = '已连接';
+                } else {
+                    dot.className = 'dot disconnected';
+                    text.textContent = '未连接';
+                }
+            };
 
-    function renderEditor() {
-        const chapters = [];
-        const chapterMap = {};
-        slidesData.forEach(function(slide) {
-            const ch = slide.chapter || '未分类';
-            if (!chapterMap[ch]) {
-                chapterMap[ch] = [];
-                chapters.push(ch);
+            async function refreshSlidesFromApi() {
+                // 从 API 重新拉取幻灯片列表，确保 order 与数据库一致
+                try {
+                    var res = await fetch('/api/slides?_t=' + Date.now());
+                    var slides = await res.json();
+                    store.slides = slides || [];
+                    store.slideOrder = slides.map(function(s) { return s.slide_id; });
+                    store.total = store.slideOrder.length;
+                    slidesData = store.slides;
+                    return slides;
+                } catch (e) {
+                    console.warn('Failed to refresh slides from API:', e);
+                    return null;
+                }
             }
-            chapterMap[ch].push(slide);
-        });
 
-        document.getElementById('totalSlides').textContent = slidesData.length;
-        document.getElementById('chapterCount').textContent = chapters.length;
-
-        const container = document.getElementById('editorBody');
-        container.innerHTML = '';
-
-        chapters.forEach(function(ch) {
-            const slides = chapterMap[ch];
-            const group = document.createElement('div');
-            group.className = 'chapter-group';
-
-            const header = document.createElement('div');
-            header.className = 'chapter-header';
-            header.innerHTML = '<span class="toggle">▼</span><span class="chapter-icon">📁</span><span class="chapter-title">' + escapeHtml(ch) + '</span><span class="chapter-count">' + slides.length + ' 页</span>';
-            header.addEventListener('click', function() { toggleChapter(header); });
-
-            const grid = document.createElement('div');
-            grid.className = 'slide-grid';
-            grid.dataset.chapter = ch;
-
-            slides.forEach(function(slide) {
-                grid.appendChild(createSlideCard(slide));
-            });
-
-            group.appendChild(header);
-            group.appendChild(grid);
-            container.appendChild(group);
-        });
-
-        initSortable();
-        updateSaveHint();
-    }
-
-    function createSlideCard(slide) {
-        const card = document.createElement('div');
-        card.className = 'slide-card';
-        card.dataset.slideId = slide.slide_id;
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'preview-wrapper';
-        wrapper.id = 'preview-' + slide.slide_id;
-        wrapper.innerHTML = previewHtmlMap[slide.slide_id] || '<div style="color:#999;padding:40px 0;text-align:center;font-size:12px;">预览加载中</div>';
-
-        // 如果本地没有缓存该幻灯片的渲染 HTML，异步补抓
-        if (!previewHtmlMap[slide.slide_id]) {
-            fetch('/api/slides/' + slide.slide_id + '/render')
-                .then(function(res) { return res.text(); })
-                .then(function(html) {
-                    previewHtmlMap[slide.slide_id] = html;
-                    const el = document.getElementById('preview-' + slide.slide_id);
-                    if (el) el.innerHTML = html;
-                })
-                .catch(function(e) { console.warn('load preview failed:', e); });
-        }
-
-        const footer = document.createElement('div');
-        footer.className = 'card-footer';
-        footer.innerHTML = '<span class="card-title">' + escapeHtml(slide.title || '未命名') + '</span>' +
-            '<span class="card-id">#' + slide.slide_id + '</span>' +
-            '<button class="btn-delete-mini" onclick="deleteSlide(\'' + slide.slide_id + '\')" title="删除">🗑</button>';
-
-        card.appendChild(wrapper);
-        card.appendChild(footer);
-        return card;
-    }
-
-    function initSortable() {
-        sortableInstances.forEach(function(inst) { inst.destroy(); });
-        sortableInstances = [];
-        document.querySelectorAll('.slide-grid').forEach(function(grid) {
-            const sortable = new Sortable(grid, {
-                group: 'slides',
-                animation: 200,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                delay: 100,
-                delayOnTouchOnly: true,
-                onEnd: function() {
-                    hasUnsortedOrder = true;
-                    updateSaveHint();
-                },
-            });
-            sortableInstances.push(sortable);
-        });
-    }
-
-    function toggleChapter(header) {
-        const toggle = header.querySelector('.toggle');
-        const grid = header.nextElementSibling;
-        const isCollapsed = grid.classList.toggle('collapsed');
-        toggle.classList.toggle('collapsed', isCollapsed);
-    }
-
-    function updateSaveHint() {
-        const hint = document.getElementById('saveHint');
-        const btn = document.getElementById('saveOrderBtn');
-        if (hasUnsortedOrder) {
-            hint.textContent = '⚠️ 排序已更改，尚未保存';
-            hint.style.color = '#e74c3c';
-            btn.disabled = false;
-        } else {
-            hint.textContent = '✅ 已是最新顺序';
-            hint.style.color = '#27ae60';
-            btn.disabled = true;
-        }
-    }
-
-    async function saveAllChanges() {
-        const btn = document.getElementById('saveOrderBtn');
-        btn.disabled = true;
-        btn.textContent = '⏳ 保存中...';
-
-        const newOrder = [];
-        document.querySelectorAll('.slide-grid').forEach(function(grid) {
-            grid.querySelectorAll('.slide-card').forEach(function(card) {
-                newOrder.push(card.dataset.slideId);
-            });
-        });
-
-        try {
-            const res = await fetch('/api/slides/reorder', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ order: newOrder }),
-            });
-            if (!res.ok) throw new Error('保存失败');
-            const data = await res.json();
-            hasUnsortedOrder = false;
-            updateSaveHint();
-            btn.textContent = '💾 保存排序';
-            showToast('✅ 排序已保存，所有页面已同步');
-        } catch (e) {
-            btn.disabled = false;
-            btn.textContent = '💾 保存排序';
-            showToast('❌ 保存失败: ' + e.message);
-        }
-    }
-
-    async function deleteSlide(slideId) {
-        if (!confirm('确定删除该幻灯片吗？')) return;
-        try {
-            const res = await fetch('/api/slides/' + slideId, { method: 'DELETE' });
-            if (!res.ok) throw new Error('删除失败');
-            showToast('✅ 幻灯片已删除');
-        } catch (e) {
-            showToast('❌ 删除失败: ' + e.message);
-        }
-    }
-
-    // ---- 上传 ----
-
-    function triggerUpload(type) {
-        const input = document.getElementById(type + 'Input');
-        if (input) input.click();
-    }
-
-    async function handleFileUpload(input, type) {
-        const file = input.files[0];
-        if (!file) return;
-        input.value = '';
-
-        const formData = new FormData();
-        formData.append('slide_type', type);
-        formData.append('file', file);
-
-        showToast('⏳ 正在上传 ' + (type === 'image' ? '图片' : '视频') + '...');
-        try {
-            const res = await fetch('/api/slides/upload', {
-                method: 'POST',
-                body: formData,
-            });
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.detail || '上传失败');
+            function init() {
+                console.log('[Editor] Initializing...');
+                store.init().then(function() {
+                    slidesData = store.slides;
+                    renderEditor();
+                    // 默认选中第一个有内容的章节
+                    if (slidesData.length > 0) {
+                        selectedChapter = slidesData[0].chapter || '未分类';
+                        var firstDiv = document.querySelector('.chapter-divider');
+                        if (firstDiv) {
+                            firstDiv.classList.add('selected');
+                        }
+                    }
+                    console.log('[Editor] Initial slideOrder:', JSON.stringify(store.slideOrder));
+                    // 编辑器只走 REST API，不受 WS 幻灯片变更消息的回环干扰
+                    store.ws.handlers['slides_reordered'] = [];
+                    store.ws.handlers['slide_created'] = [];
+                    store.ws.handlers['slide_updated'] = [];
+                    store.ws.handlers['slide_deleted'] = [];
+                });
             }
-            showToast('✅ ' + (type === 'image' ? '图片' : '视频') + '页已创建并同步');
-        } catch (e) {
-            showToast('❌ 上传失败: ' + e.message);
-        }
-    }
 
-    // ---- 工具函数 ----
+            function selectChapter(ch) {
+                selectedChapter = ch;
+                document.querySelectorAll('.chapter-divider').forEach(function(d) {
+                    d.classList.toggle('selected', d.dataset.chapter === ch);
+                });
+            }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
+            function renderEditor() {
+                var chapters = [];
+                var chapterMap = {};
+                slidesData.forEach(function(slide) {
+                    var ch = slide.chapter || '未分类';
+                    if (!chapterMap[ch]) {
+                        chapterMap[ch] = [];
+                        chapters.push(ch);
+                    }
+                    chapterMap[ch].push(slide);
+                });
 
-    let toastTimer = null;
-    function showToast(msg) {
-        const el = document.getElementById('toast');
-        el.textContent = msg;
-        el.classList.add('show');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2500);
-    }
+                document.getElementById('totalSlides').textContent = slidesData.length;
+                document.getElementById('chapterCount').textContent = chapters.length;
 
-    init();
-</script>
+                var container = document.getElementById('editorBody');
+                container.innerHTML = '';
+
+                if (chapters.length === 0) {
+                    container.innerHTML = '<div class="editor-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><h3>暂无幻灯片</h3><p>请在演示页中添加内容</p></div>';
+                    return;
+                }
+
+                chapters.forEach(function(ch, idx) {
+                    var slides = chapterMap[ch];
+
+                    // Chapter section container
+                    var section = document.createElement('div');
+                    section.className = 'chapter-section';
+
+                    // Divider with chapter name (always show, even for first)
+                    var divider = document.createElement('div');
+                    divider.className = 'chapter-divider' + (ch === selectedChapter ? ' selected' : '');
+                    divider.dataset.chapter = ch;
+                    divider.onclick = function() { selectChapter(ch); };
+                    divider.innerHTML =
+                        '<span class="label" ondblclick="editChapter(this, \'' + escapeHtml(ch) + '\')">📌 ' + escapeHtml(ch) + ' <span class="count">' + slides.length + '</span></span>' +
+                        '<div class="divider-actions">' +
+                        '<button class="divider-btn" onclick="editChapter(this.parentElement.parentElement.querySelector(\'.label\'), \'' + escapeHtml(ch) + '\')" title="重命名">' +
+                        '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                        '</button>' +
+                        '<button class="divider-btn danger" onclick="deleteChapter(\'' + escapeHtml(ch) + '\')" title="删除章节">' +
+                        '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+                        '</button>' +
+                        '</div>';
+                    section.appendChild(divider);
+
+                    // Grid for this chapter's cards
+                    var grid = document.createElement('div');
+                    grid.className = 'slide-grid';
+                    grid.dataset.chapter = ch;
+
+                    slides.forEach(function(slide) {
+                        grid.appendChild(createSlideCard(slide));
+                    });
+
+                    section.appendChild(grid);
+                    container.appendChild(section);
+                });
+
+                initSortable();
+            }
+
+            function createSlideCard(slide) {
+                var card = document.createElement('div');
+                card.className = 'slide-card';
+                card.dataset.slideId = slide.slide_id;
+
+                var preview = document.createElement('div');
+                preview.className = 'card-preview';
+                preview.id = 'preview-' + slide.slide_id;
+
+                // 统一用 iframe 加载 /api/slides/<id>/page，让每一张 slide 都在自己的
+                // 独立文档中渲染：彻底隔离 CSS / DOM 结构，HTML 类模板亦能完整缩放显示，
+                // 不再受拼接 HTML 的脆弱性影响。CSS 中已有
+                // .card-preview iframe { width:1920px; height:1080px; transform: scale(0.108) }。
+                // 采用 loading=lazy + 占位 placeholder：iframe 在进入视口前不发起请求，
+                // 避免一次实例化 80+ iframe 拖慢首屏。
+                var iframe = document.createElement('iframe');
+                iframe.src = '/api/slides/' + encodeURIComponent(slide.slide_id) + '/page';
+                iframe.loading = 'lazy';
+                iframe.setAttribute('referrerpolicy', 'no-referrer');
+                iframe.setAttribute('scrolling', 'no');
+                iframe.title = slide.title || 'slide';
+                // iframe 加载完成前显示一个轻盈的占位，避免卡片顶部留白看起来像"异常"
+                var placeholder = document.createElement('div');
+                placeholder.className = 'preview-placeholder';
+                placeholder.textContent = TYPE_LABELS[slide.type] || '📄';
+                iframe.addEventListener('load', function() {
+                    if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+                });
+                preview.appendChild(placeholder);
+                preview.appendChild(iframe);
+
+                var footer = document.createElement('div');
+                footer.className = 'card-footer';
+                footer.innerHTML =
+                    '<div class="drag-handle"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg></div>' +
+                    '<span class="card-title">' + escapeHtml(slide.title || '未命名') + '</span>' +
+                    '<span class="card-type">' + (TYPE_LABELS[slide.type] || '📄 HTML') + '</span>' +
+                    '<button class="btn-delete" onclick="deleteSlide(\'' + slide.slide_id + '\')" title="删除幻灯片">' +
+                    '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+                    '</button>';
+
+                card.appendChild(preview);
+                card.appendChild(footer);
+                return card;
+            }
+
+            var _autoSaveTimer = null;
+
+            function initSortable() {
+                sortableInstances.forEach(function(inst) { inst.destroy(); });
+                sortableInstances = [];
+                document.querySelectorAll('.slide-grid').forEach(function(grid) {
+                    var ch = grid.dataset.chapter || 'default';
+                    var sortable = new Sortable(grid, {
+                        group: { name: 'gsp-chapter-' + ch, pull: true, put: true },
+                        animation: 200,
+                        ghostClass: 'sortable-ghost',
+                        chosenClass: 'sortable-chosen',
+                        dragClass: 'sortable-drag',
+                        delay: 150,
+                        delayOnTouchOnly: true,
+                        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        onEnd: function(evt) {
+                            if (evt.from !== evt.to) {
+                                var slideId = evt.item.dataset.slideId;
+                                var newChapter = (evt.to || evt.from).dataset.chapter || '未分类';
+                                var slide = store.slides.find(function(s) { return s.slide_id === slideId; });
+                                console.log('[Drag] cross-chapter: ' + slideId + ' → ' + newChapter + (slide ? ' (was ' + slide.chapter + ')' : ''));
+                            }
+                            // 防抖：拖拽后 300ms 自动保存
+                            clearTimeout(_autoSaveTimer);
+                            _autoSaveTimer = setTimeout(autoSave, 300);
+                        },
+                    });
+                    sortableInstances.push(sortable);
+                });
+            }
+
+            function setHint(text, cls) {
+                var hint = document.getElementById('saveHint');
+                hint.textContent = text;
+                hint.className = 'save-hint ' + (cls || 'saved');
+            }
+
+            function setHintSaving() { setHint('⏳ 保存中...', 'unsaved'); }
+            function setHintSaved()  { setHint('✅ 已是最新顺序', 'saved'); }
+            function setHintError()  { setHint('❌ 保存失败', 'unsaved'); setTimeout(setHintSaved, 3000); }
+
+            var _saving = false;
+            var _pendingSave = false;
+
+            async function autoSave() {
+                if (_saving) { _pendingSave = true; return; }
+                _saving = true;
+                _pendingSave = false;
+                setHintSaving();
+
+                // 收集 DOM 各 grid 的卡片顺序 & 章节变更
+                var chapterChanges = {};
+                var newOrder = [];
+                document.querySelectorAll('.slide-grid').forEach(function(grid) {
+                    var ch = grid.dataset.chapter || '未分类';
+                    grid.querySelectorAll('.slide-card').forEach(function(card) {
+                        var sid = card.dataset.slideId;
+                        newOrder.push(sid);
+                        var slide = store.slides.find(function(s) { return s.slide_id === sid; });
+                        if (slide && slide.chapter !== ch) {
+                            chapterChanges[sid] = ch;
+                        }
+                    });
+                });
+
+                console.log('[AutoSave] Sending PUT order=' + newOrder.length + ' items' + (Object.keys(chapterChanges).length > 0 ? ' changes=' + JSON.stringify(chapterChanges) : ''));
+                try {
+                    var body = { order: newOrder };
+                    if (Object.keys(chapterChanges).length > 0) body.chapter_changes = chapterChanges;
+                    var res = await fetch('/api/slides/reorder', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body),
+                    });
+                    if (!res.ok) {
+                        var errText = '';
+                        try { errText = await res.text(); } catch(_) {}
+                        throw new Error('HTTP ' + res.status + (errText ? ': ' + errText.slice(0,80) : ''));
+                    }
+                    console.log('[AutoSave] PUT OK, refreshing...');
+                    await refreshSlidesFromApi();
+                    console.log('[AutoSave] Refresh done, rendering...');
+                    renderEditor();
+                    console.log('[AutoSave] Done');
+                    setHintSaved();
+                    if (_pendingSave) {
+                        _pendingSave = false;
+                        _saving = false;
+                        autoSave();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('[AutoSave] Failed:', e);
+                    setHint('❌ ' + (e.message || '保存失败'), 'unsaved');
+                    setTimeout(setHintSaved, 4000);
+                }
+                _saving = false;
+            }
+
+
+
+            async function refreshAndRender() {
+                await refreshSlidesFromApi();
+                renderEditor();
+            }
+
+            async function deleteSlide(slideId) {
+                if (!confirm('确定删除该幻灯片吗？')) return;
+                try {
+                    var res = await fetch('/api/slides/' + slideId, { method: 'DELETE' });
+                    if (!res.ok) throw new Error('删除失败');
+                    await refreshAndRender();
+                    showToast('幻灯片已删除', 'success');
+                } catch (e) {
+                    showToast('删除失败: ' + e.message, 'error');
+                }
+            }
+
+            // ---- 章节管理 ----
+
+            async function createChapter() {
+                var name = prompt('请输入新章节名称：', '新章节');
+                if (!name) return;
+                try {
+                    var res = await fetch('/api/slides/chapter/create?chapter=' + encodeURIComponent(name), { method: 'POST' });
+                    if (!res.ok) throw new Error(await res.text());
+                    await refreshAndRender();
+                    showToast('✅ 新章节 "' + name + '" 已创建', 'success');
+                } catch (e) {
+                    showToast('❌ 创建章节失败: ' + e.message, 'error');
+                }
+            }
+
+            function editChapter(labelEl, oldName) {
+                // 避免重复编辑
+                if (labelEl.querySelector('.chapter-name-input')) return;
+
+                var textNode = labelEl.childNodes[0];  // 文本节点 "📌 xxx"
+                var currentName = oldName;
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'chapter-name-input';
+                input.value = currentName;
+                input.style.width = (currentName.length * 14 + 20) + 'px';
+
+                // 替换文本节点为输入框
+                labelEl.replaceChild(input, textNode);
+
+                input.focus();
+                input.select();
+
+                function done() {
+                    var newName = input.value.trim();
+                    if (newName && newName !== currentName) {
+                        renameChapterApi(currentName, newName, labelEl, input);
+                    } else {
+                        // 恢复文本
+                        var text = document.createTextNode('📌 ' + currentName + ' ');
+                        labelEl.replaceChild(text, input);
+                    }
+                }
+
+                input.addEventListener('blur', done);
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { input.blur(); }
+                    if (e.key === 'Escape') {
+                        var text = document.createTextNode('📌 ' + currentName + ' ');
+                        labelEl.replaceChild(text, input);
+                    }
+                });
+            }
+
+            async function renameChapterApi(oldName, newName, labelEl, input) {
+                try {
+                    var res = await fetch('/api/slides/chapter/rename?old_name=' + encodeURIComponent(oldName) + '&new_name=' + encodeURIComponent(newName), { method: 'PUT' });
+                    if (!res.ok) throw new Error(await res.text());
+                    var text = document.createTextNode('📌 ' + newName + ' ');
+                    labelEl.replaceChild(text, input);
+                    await refreshAndRender();
+                    showToast('✅ 章节已重命名: ' + newName, 'success');
+                } catch (e) {
+                    showToast('❌ 重命名失败: ' + e.message, 'error');
+                    var text = document.createTextNode('📌 ' + oldName + ' ');
+                    labelEl.replaceChild(text, input);
+                }
+            }
+
+            async function deleteChapter(chapterName) {
+                var count = slidesData.filter(function(s) { return s.chapter === chapterName; }).length;
+                if (!confirm('确定删除章节 "' + chapterName + '" 及其 ' + count + ' 页幻灯片吗？')) return;
+                try {
+                    var res = await fetch('/api/slides/chapter/' + encodeURIComponent(chapterName), { method: 'DELETE' });
+                    if (!res.ok) throw new Error(await res.text());
+                    await refreshAndRender();
+                    showToast('✅ 章节 "' + chapterName + '" 已删除', 'success');
+                } catch (e) {
+                    showToast('❌ 删除失败: ' + e.message, 'error');
+                }
+            }
+
+            // ---- Upload ----
+            function triggerUpload(type) {
+                var input = document.getElementById(type + 'Input');
+                if (input) input.click();
+            }
+
+            async function handleFileUpload(input, type) {
+                var file = input.files[0];
+                if (!file) return;
+                input.value = '';
+
+                var formData = new FormData();
+                formData.append('slide_type', type);
+                formData.append('file', file);
+
+                // 追加选中的章节到 formData
+                formData.append('chapter', selectedChapter || '素材');
+                try {
+                    var res = await fetch('/api/slides/upload', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    if (!res.ok) {
+                        var err = await res.json();
+                        throw new Error(err.detail || '上传失败');
+                    }
+                    await refreshAndRender();
+                    showToast((type === 'image' ? '图片' : '视频') + '页已添加到「' + (selectedChapter || '素材') + '」章节', 'success');
+                } catch (e) {
+                    showToast('上传失败: ' + e.message, 'error');
+                }
+            }
+
+            // ---- Toast ----
+            function showToast(msg, type) {
+                var container = document.getElementById('toastContainer');
+                var toast = document.createElement('div');
+                toast.className = 'toast ' + (type || '');
+                toast.textContent = msg;
+                container.appendChild(toast);
+                requestAnimationFrame(function() {
+                    toast.classList.add('show');
+                });
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(function() {
+                    toast.classList.remove('show');
+                    setTimeout(function() { toast.remove(); }, 300);
+                }, 2500);
+            }
+
+            // ---- Utility ----
+            function escapeHtml(str) {
+                if (!str) return '';
+                return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            // Add spin keyframe
+            var style = document.createElement('style');
+            style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+
+            // Make functions globally accessible
+            window.triggerUpload = triggerUpload;
+            window.handleFileUpload = handleFileUpload;
+            window.deleteSlide = deleteSlide;
+            window.editChapter = editChapter;
+            window.deleteChapter = deleteChapter;
+            window.createChapter = createChapter;
+
+            init();
+        })();
+    </script>
 </body>
 </html>
