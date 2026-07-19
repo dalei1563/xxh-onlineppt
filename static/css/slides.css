@@ -38,12 +38,6 @@
         .slide.active {
             animation: slideFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        .slide {
-            animation: slideFadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        .slide.active {
-            display: flex;
-        }
 
         /* ==================== PPT 风格的阴影和圆角 ==================== */
         .slide {
@@ -78,8 +72,7 @@
 }
 
         /* ==================== 全屏媒体页（视频/图片） ==================== */
-        .slide-media {
-            display: flex;
+        .slide.slide-media {
             align-items: center;
             justify-content: center;
             background: #000;
@@ -1016,4 +1009,103 @@
         }
         .preview-mode video {
             display: none !important;
+        }
+
+        /* ==================== 基础模板样式 ==================== */
+        .slide.template-base {
+            background: #ffffff;
+            flex-direction: row;
+        }
+        .slide.template-base .gsp-logo {
+            position: absolute;
+            top: 25px;
+            right: 90px;
+            z-index: 10;
+        }
+        .slide.template-base .gsp-logo img {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+        .slide.template-base .right-sidebar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 75px;
+            height: 100%;
+            background: #0066cc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 0 40px 0;
+            z-index: 10;
+        }
+        .slide.template-base .sidebar-icon {
+            width: 42px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 21px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slide.template-base .sidebar-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+        .slide.template-base .page-indicator {
+            writing-mode: vertical-rl;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: rotate(180deg);
+        }
+        .slide.template-base .page-indicator::after {
+            content: '';
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .slide.template-base .content-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 75px;
+            bottom: 0;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+        }
+        .slide.template-base .accent-line {
+            width: 80px;
+            height: 4px;
+            background: #0066cc;
+            margin-bottom: 40px;
+        }
+        .slide.template-base .title {
+            font-size: 56px;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 30px;
+            line-height: 1.3;
+        }
+        .slide.template-base .subtitle {
+            font-size: 28px;
+            color: #666666;
+            margin-bottom: 50px;
+            line-height: 1.5;
+        }
+        .slide.template-base .body {
+            font-size: 24px;
+            color: #333333;
+            line-height: 1.8;
+            flex: 1;
+        }
+        .slide.template-base .body p {
+            margin-bottom: 20px;
         }

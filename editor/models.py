@@ -1,8 +1,9 @@
 """
 Pydantic models for slide editor API.
+内容以独立文件存储，DB 只存元数据。
 """
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
+from typing import Optional, List
 
 
 class SlideInfo(BaseModel):
@@ -13,19 +14,19 @@ class SlideInfo(BaseModel):
     type: str = "content"
     chapter: str = ""
     display_order: int = 0
-    content_json: Dict[str, Any] = {}
+    file_path: str = ""
 
 
 class SlideReorder(BaseModel):
     """排序请求"""
     order: List[str] = Field(..., description="按新顺序排列的 slide_id 数组")
+    chapter_changes: Optional[dict[str, str]] = Field(default=None, description="slide_id → 新章节名称 的映射")
 
 
 class SlideUpdate(BaseModel):
     """更新幻灯片内容"""
     title: Optional[str] = None
     chapter: Optional[str] = None
-    content_json: Optional[Dict[str, Any]] = None
 
 
 class SlideCreate(BaseModel):
@@ -33,7 +34,6 @@ class SlideCreate(BaseModel):
     type: str
     chapter: Optional[str] = None
     title: Optional[str] = None
-    content_json: Optional[Dict[str, Any]] = None
 
 
 class SlideRenderResponse(BaseModel):

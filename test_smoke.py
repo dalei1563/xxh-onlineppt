@@ -51,7 +51,6 @@ def test_http():
         r = client.post('/api/slides/create', json={
             'type': 'white',
             'title': '冒烟测试页',
-            'content_json': {'content': '这是由 test_smoke.py 创建的测试页。'}
         })
         assert r.status_code == 200, r.text
         new_id = r.json()['slide_id']
@@ -62,10 +61,9 @@ def test_http():
         assert len(r.json()) == len(order) + 1
         print(f'[HTTP] order after create -> {len(r.json())} slides')
 
-        # 8. 更新内容
+        # 8. 更新标题
         r = client.put(f'/api/slides/{new_id}', json={
             'title': '更新后的标题',
-            'content_json': {'content': '更新后的内容。'}
         })
         assert r.status_code == 200, r.text
         print(f'[HTTP] PUT /api/slides/{new_id} -> ok')

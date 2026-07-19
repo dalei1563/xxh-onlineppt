@@ -53,6 +53,15 @@
             self.slideOrder = data.order || [];
             self.total = self.slideOrder.length;
             self.currentPosition = self.slideOrder.indexOf(self.currentSlideId) + 1;
+            // 关键修复：同步 slides 数组顺序，确保 slidesData 与 store 一致
+            var reordered = [];
+            data.order.forEach(function(id) {
+                var slide = self.slides.find(function(s) { return s.slide_id === id; });
+                if (slide) reordered.push(slide);
+            });
+            if (reordered.length === self.slides.length) {
+                self.slides = reordered;
+            }
             if (self.onSlidesReordered) self.onSlidesReordered(data.order);
             if (self.onSlidesChange) self.onSlidesChange(self.slides);
             self._notifyCurrentSlideChange();

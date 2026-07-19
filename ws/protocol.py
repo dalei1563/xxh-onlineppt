@@ -47,6 +47,11 @@ class ReplayVideoMsg(InboundMessage):
     type: Literal["replay_video"] = "replay_video"
 
 
+class DisplayModeMsg(InboundMessage):
+    type: Literal["display_mode"] = "display_mode"
+    mode: str  # "fill" 或 "16-9"
+
+
 class ScoreUpdateMsg(InboundMessage):
     type: Literal["score_update"] = "score_update"
     team_name: str
@@ -132,6 +137,11 @@ class FullscreenMsgOut(OutboundMessage):
 class ReplayVideoMsgOut(OutboundMessage):
     type: Literal["replay_video"] = "replay_video"
     source: Optional[int] = None
+
+
+class DisplayModeMsgOut(OutboundMessage):
+    type: Literal["display_mode"] = "display_mode"
+    mode: str
 
 
 class SlideCreatedMsg(OutboundMessage):

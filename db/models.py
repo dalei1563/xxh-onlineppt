@@ -26,21 +26,20 @@ class TeamScore(Base):
 
 
 class SlideMeta(Base):
-    """幻灯片元数据"""
+    """幻灯片元数据——实际内容存储在独立文件中"""
     __tablename__ = "slides_meta"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    slide_id = Column(String(10), nullable=False, unique=True, comment="幻灯片标识，如 1, 1b, 2...66")
+    slide_id = Column(String(50), nullable=False, unique=True, comment="幻灯片标识，如 1, 1b, s-abc123...")
     title = Column(String(200), default="", comment="编辑器中显示的标题")
-    type = Column(String(50), default="content", comment="幻灯片类型")
+    type = Column(String(50), default="image", comment="幻灯片类型: video/image/white")
     chapter = Column(String(100), default="", comment="所属章节名称")
     display_order = Column(Integer, nullable=False, default=0, comment="排序序号")
-    content_json = Column(Text, default="{}", comment="可编辑内容（JSON 格式）")
+    file_path = Column(String(500), default="", comment="内容文件路径（相对 static/）")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def to_dict(self):
-        import json
         return {
             "id": self.id,
             "slide_id": self.slide_id,
@@ -48,5 +47,5 @@ class SlideMeta(Base):
             "type": self.type,
             "chapter": self.chapter,
             "display_order": self.display_order,
-            "content_json": json.loads(self.content_json) if self.content_json else {},
+            "file_path": self.file_path,
         }
