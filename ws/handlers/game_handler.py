@@ -8,13 +8,13 @@ import asyncio
 from db.database import SessionLocal
 from services.game_service import game_service
 from state.presentation import presentation_state
+from ws.handlers.tts_handler import speak as tts_speak
 from ws.protocol import (
     ScoreUpdateMsgOut,
     ScoreSetMsgOut,
     ScoreBoardMsg,
     ScoreResetMsgOut,
     GameControlMsgOut,
-    TtsSpeakMsg,
 )
 
 
@@ -40,9 +40,9 @@ async def handle_score_update(manager: Any, data: dict, client_id: int):
 
             if auto_tts:
                 tts_text = game_service.get_tts_for_score(result.team_name, delta, result.score)
-                await manager.broadcast(
-                    TtsSpeakMsg(text=tts_text).model_dump()
-                )
+                # 通过 TTS 公共入口真正生成音频并广播 TtsFileMsg / TtsBrowserMsg，
+                # 而不是只广播入站类型 tts_speak（前端并不监听该类型，等于哑播）。
+                await tts_speak(manager, tts_text)
 
             print(f"[Game] Score updated: {team_name} {delta:+d} -> {result.score}")
         else:

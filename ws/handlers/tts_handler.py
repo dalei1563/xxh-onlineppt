@@ -22,13 +22,23 @@ async def _generate_and_broadcast(manager: Any, text: str, voice: str = ""):
         )
 
 
+async def speak(manager: Any, text: str, voice: str = ""):
+    """
+    TTS 公共入口：触发异步生成并广播 TtsFileMsg / TtsBrowserMsg。
+    供积分自动播报、AI 回复等"系统侧"调用使用，避免重复实现。
+    """
+    if not text:
+        return
+    asyncio.create_task(_generate_and_broadcast(manager, text, voice))
+
+
 async def handle_tts_speak(manager: Any, data: dict, client_id: int):
     text = data.get("text", "")
     voice = data.get("voice", "")
     if not text:
         return
     print(f"[TTS] Speak requested: {text[:50]}... (client={client_id})")
-    asyncio.create_task(_generate_and_broadcast(manager, text, voice))
+    await speak(manager, text, voice)
 
 
 async def handle_tts_stop(manager: Any, data: dict, client_id: int):
@@ -41,7 +51,7 @@ async def handle_tts_request(manager: Any, data: dict, client_id: int):
     text = data.get("text", "")
     if text:
         print(f"[TTS] Internal TTS request: {text[:50]}...")
-        asyncio.create_task(_generate_and_broadcast(manager, text, ""))
+        await speak(manager, text, "")
 
 
 def register_tts_handlers(router):

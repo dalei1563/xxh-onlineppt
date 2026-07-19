@@ -80,6 +80,20 @@ async def handle_ai_voice_clear(manager: Any, data: dict, client_id: int):
     )
 
 
+def _on_client_disconnect(client_id: int):
+    """客户端断开时清理其对话历史，避免：
+    1. 内存随连接累积泄漏；
+    2. 新连接复用同 id 继承旧用户的对话（在使用 id(websocket) 时会发生）。
+    现已改用唯一自增 client_id，但保留清理以确保长期内存稳定。
+    """
+    _conversation_history.pop(client_id, None)
+
+
+def register_ai_disconnect_handler(manager):
+    """向连接管理器注册 AI 领域的断开清理回调"""
+    manager.register_disconnect_callback(_on_client_disconnect)
+
+
 async def handle_ai_voice_start(manager: Any, data: dict, client_id: int):
     await manager.send_to_client(
         client_id,

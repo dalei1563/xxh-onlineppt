@@ -50,7 +50,10 @@ class ASRManager:
 
             client_kwargs = {}
             if self.proxy:
-                client_kwargs["proxies"] = self.proxy
+                client_kwargs["proxies"] = {
+                    "http://": self.proxy,
+                    "https://": self.proxy,
+                }
 
             async with httpx.AsyncClient(**client_kwargs, timeout=120.0) as client:
                 headers = {
