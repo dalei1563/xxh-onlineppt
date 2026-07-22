@@ -1,9 +1,14 @@
 __pycache__/
 *.pyc
 *.pyo
-data/
 audio/
-static/uploads/
+
+# Keep only SQLite's transient journal files local.  The canonical activity
+# database and uploaded deck assets are versioned so another presentation PC
+# can restore the same deck with a normal git pull.
+data/*.db-shm
+data/*.db-wal
+data/*.db-journal
 
 # 本地运行/调试产物
 .env
