@@ -10,6 +10,7 @@ from services.game_service import game_service
 from state.presentation import presentation_state
 from ws.handlers.tts_handler import speak as tts_speak
 from ws.protocol import (
+    ErrorMsg,
     ScoreUpdateMsgOut,
     ScoreSetMsgOut,
     ScoreBoardMsg,
@@ -20,7 +21,14 @@ from ws.protocol import (
 
 async def handle_score_update(manager: Any, data: dict, client_id: int):
     team_name = data.get("team_name", "")
-    delta = int(data.get("delta", 0))
+    try:
+        delta = int(data.get("delta", 0))
+    except (TypeError, ValueError):
+        await manager.send_to_client(client_id, ErrorMsg(message="积分变更必须是整数").model_dump())
+        return
+    if abs(delta) > 10000:
+        await manager.send_to_client(client_id, ErrorMsg(message="单次积分变更不能超过 10000").model_dump())
+        return
     auto_tts = bool(data.get("auto_tts", False))
 
     if not team_name:
@@ -53,7 +61,14 @@ async def handle_score_update(manager: Any, data: dict, client_id: int):
 
 async def handle_score_set(manager: Any, data: dict, client_id: int):
     team_name = data.get("team_name", "")
-    score = int(data.get("score", 0))
+    try:
+        score = int(data.get("score", 0))
+    except (TypeError, ValueError):
+        await manager.send_to_client(client_id, ErrorMsg(message="积分必须是整数").model_dump())
+        return
+    if abs(score) > 1_000_000:
+        await manager.send_to_client(client_id, ErrorMsg(message="积分绝对值不能超过 1000000").model_dump())
+        return
 
     if not team_name:
         return

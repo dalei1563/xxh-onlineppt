@@ -4,7 +4,6 @@ Slides REST API - 幻灯片元数据与内容接口。
 """
 import os
 import re
-import shutil
 import uuid
 from pathlib import Path
 from typing import List
@@ -29,6 +28,8 @@ from ws.protocol import (
 router = APIRouter(prefix="/api/slides", tags=["slides"])
 
 UPLOADS_DIR = Path(__file__).parent.parent / "static" / "uploads"
+MAX_UPLOAD_SIZE_BYTES = int(os.getenv("MAX_UPLOAD_SIZE_BYTES", 100 * 1024 * 1024))
+UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 
 # ---- 集合路由 ----
@@ -55,7 +56,23 @@ async def get_full_slides(db: Session = Depends(get_db)):
 @router.put("/reorder")
 async def reorder_slides(data: SlideReorder, db: Session = Depends(get_db)):
     """保存幻灯片新排序，可选同步更新章节归属"""
-    slide_service.reorder_slides(db, data.order)
+    current_order = slide_service.get_slide_order(db)
+    requested_order = data.order
+    # 排序必须是当前全部幻灯片的一次完整排列。否则重复或遗漏的 ID 会让
+    # DB、服务端状态和各客户端的顺序发生不可恢复的分歧。
+    if (
+        len(requested_order) != len(current_order)
+        or len(set(requested_order)) != len(requested_order)
+        or set(requested_order) != set(current_order)
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="排序必须包含每张现有幻灯片一次且仅一次",
+        )
+    if data.chapter_changes and not set(data.chapter_changes).issubset(set(current_order)):
+        raise HTTPException(status_code=422, detail="章节变更包含不存在的幻灯片")
+
+    slide_service.reorder_slides(db, requested_order)
     # 处理跨章节拖拽的章节变更
     updated_slides = []
     if data.chapter_changes:
@@ -65,9 +82,9 @@ async def reorder_slides(data: SlideReorder, db: Session = Depends(get_db)):
                 slide.chapter = new_chapter
                 updated_slides.append(slide)
         db.commit()
-    presentation_state.set_slide_order(data.order)
+    presentation_state.set_slide_order(requested_order)
     await ws_manager.broadcast(
-        SlidesReorderedMsg(order=data.order).model_dump()
+        SlidesReorderedMsg(order=requested_order).model_dump()
     )
     # 广播章节变更
     for s in updated_slides:
@@ -75,7 +92,7 @@ async def reorder_slides(data: SlideReorder, db: Session = Depends(get_db)):
         await ws_manager.broadcast(
             SlideUpdatedMsg(slide=info.model_dump()).model_dump()
         )
-    return {"message": "排序已保存", "order": data.order}
+    return {"message": "排序已保存", "order": requested_order}
 
 
 @router.post("/create")
@@ -132,22 +149,43 @@ async def upload_slide_media(
 
     try:
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            size = 0
+            while chunk := await file.read(UPLOAD_CHUNK_SIZE):
+                size += len(chunk)
+                if size > MAX_UPLOAD_SIZE_BYTES:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"文件不能超过 {MAX_UPLOAD_SIZE_BYTES // (1024 * 1024)} MB",
+                    )
+                buffer.write(chunk)
+    except HTTPException:
+        if file_path.exists():
+            file_path.unlink()
+        raise
     except Exception as e:
+        if file_path.exists():
+            file_path.unlink()
         raise HTTPException(status_code=500, detail=f"文件保存失败: {e}")
     finally:
         file.file.close()
 
     asset_url = f"/static/uploads/{file_id}"
 
-    result = slide_service.create_slide(
-        db,
-        slide_type=slide_type,
-        title="图片页" if slide_type == "image" else "视频页",
-        chapter=chapter,
-        file_src=asset_url,
-    )
+    try:
+        result = slide_service.create_slide(
+            db,
+            slide_type=slide_type,
+            title="图片页" if slide_type == "image" else "视频页",
+            chapter=chapter,
+            file_src=asset_url,
+        )
+    except Exception:
+        if file_path.exists():
+            file_path.unlink()
+        raise
     if not result:
+        if file_path.exists():
+            file_path.unlink()
         raise HTTPException(status_code=400, detail=f"无法创建 slide type: {slide_type}")
 
     order = slide_service.get_slide_order(db)
@@ -267,6 +305,11 @@ async def render_slide_page(slide_id: str, db: Session = Depends(get_db)):
     html = slide_service.get_slide_html_by_id(db, slide_id)
     if not html:
         raise HTTPException(status_code=404, detail=f"未找到幻灯片: {slide_id}")
+
+    # 检测幻灯片类型，添加相应的 CSS
+    extra_css = ""
+    if "template-ai-chat" in html:
+        extra_css = '<link rel="stylesheet" href="/static/css/ai-chat.css">'
     # 给根 div 的 class 加上 active（若已存在则不重复）
     # slides.css 中 .slide { display:none }、.slide.active { display:flex }
     slide_fragment = re.sub(
@@ -283,6 +326,7 @@ async def render_slide_page(slide_id: str, db: Session = Depends(get_db)):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/static/css/slides.css">
+{extra_css}
 </head>
 <body class="presentation">
 {slide_fragment}

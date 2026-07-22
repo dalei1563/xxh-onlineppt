@@ -36,27 +36,24 @@ class SlideService:
     # ===== 初始化 =====
 
     def seed_slides(self, db: Session):
-        """初始化种子数据（只在数据库为空时执行）"""
+        """初始化版本受控的默认幻灯片（只在数据库为空时执行）。"""
         existing = db.query(SlideMeta).count()
         if existing > 0:
             return
-        from editor.templates import TEMPLATES
-        # 注册内置幻灯片：模板类型的默认 skeleton 即为内容
-        builtins = [
-            ("intro",  "视频开场",          "video",   "开场",     {}),
-        ]
-        for i, (sid, title, stype, chapter, params) in enumerate(builtins):
+        from editor.default_slides import DEFAULT_SLIDES
+
+        for i, item in enumerate(DEFAULT_SLIDES):
             slide = SlideMeta(
-                slide_id=sid,
-                title=title,
-                type=stype,
-                chapter=chapter,
+                slide_id=item["slide_id"],
+                title=item["title"],
+                type=item["type"],
+                chapter=item["chapter"],
                 display_order=i,
-                file_path="",
+                file_path=item["file_path"],
             )
             db.add(slide)
         db.commit()
-        print(f"[Editor] Seeded {len(builtins)} built-in slides")
+        print(f"[Editor] Seeded {len(DEFAULT_SLIDES)} built-in slides")
 
     # ===== 查询 =====
 

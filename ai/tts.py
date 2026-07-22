@@ -1,14 +1,16 @@
 """
-TTS (Text-to-Speech) service - 智谱 API integration.
+TTS (Text-to-Speech) service - 智谱 GLM-TTS API integration.
 
 Uses Zhipu GLM-TTS API to synthesize speech from text.
 Supports caching and proxy configuration.
 """
+import asyncio
 import os
 import hashlib
-import json
+import wave
+import array
 from typing import Optional
-import httpx
+from zai import ZhipuAiClient
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,21 +28,50 @@ class TTSManager:
 
     def __init__(self):
         self.api_key = os.getenv("ZHIPU_API_KEY", "")
-        self.api_url = "https://open.bigmodel.cn/api/paas/v4/tts"
-        self.model = os.getenv("ZHIPU_TTS_MODEL", "glm-4-voice")
-        # 代理配置（仅用于调用智谱 API）
-        self.proxy = os.getenv("AI_PROXY", "") or None
+        self.model = os.getenv("ZHIPU_TTS_MODEL", "glm-tts")
+        self._client = None
         self._ready = bool(self.api_key)
+        if self._ready:
+            self._client = ZhipuAiClient(api_key=self.api_key)
 
     @property
     def is_ready(self) -> bool:
         return self._ready
 
+    def _trim_audio_head(self, filepath: str, trim_seconds: float = 0.15):
+        """裁剪音频开头的静音/异常部分"""
+        try:
+            with wave.open(filepath, 'rb') as wav:
+                params = wav.getparams()
+                skip_samples = int(params.framerate * trim_seconds)
+
+                if skip_samples <= 0:
+                    return
+
+                all_frames = wav.readframes(params.nframes)
+                samples = array.array('h', all_frames)
+
+                if skip_samples >= len(samples):
+                    return
+
+                trimmed = samples[skip_samples:]
+
+                # 保存裁剪后的音频
+                with wave.open(filepath, 'wb') as out:
+                    out.setnchannels(params.nchannels)
+                    out.setsampwidth(params.sampwidth)
+                    out.setframerate(params.framerate)
+                    out.writeframes(trimmed.tobytes())
+
+                print(f"[TTS] Trimmed {trim_seconds}s from audio head")
+        except Exception as e:
+            print(f"[TTS] Trim failed: {e}")
+
     def _get_cache_path(self, text: str, voice: str = "") -> str:
         """根据文本内容生成缓存文件名"""
         key = f"{text}_{voice}"
         hash_str = hashlib.md5(key.encode("utf-8")).hexdigest()
-        return os.path.join(AUDIO_DIR, f"tts_{hash_str}.mp3")
+        return os.path.join(AUDIO_DIR, f"tts_{hash_str}.wav")
 
     async def synthesize(self, text: str, voice: str = "") -> Optional[str]:
         """
@@ -58,7 +89,7 @@ class TTSManager:
             print(f"[TTS] Cache hit: {text[:30]}...")
             return cache_url
 
-        if not self._ready:
+        if not self._ready or not self._client:
             print("[TTS] API Key 未配置，使用浏览器 TTS 降级")
             return None
 
@@ -66,40 +97,24 @@ class TTSManager:
         try:
             print(f"[TTS] Calling Zhipu TTS API: {text[:30]}...")
 
-            # 构建客户端（支持代理）
-            client_kwargs = {}
-            if self.proxy:
-                client_kwargs["proxies"] = {
-                    "http://": self.proxy,
-                    "https://": self.proxy,
-                }
+            response = await asyncio.to_thread(
+                self._client.audio.speech,
+                model=self.model,
+                input=text,
+                voice=voice or "female",
+                response_format="wav",
+                speed=1.0,
+                volume=1.0,
+            )
 
-            async with httpx.AsyncClient(**client_kwargs, timeout=60.0) as client:
-                headers = {
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                }
-                payload = {
-                    "model": self.model,
-                    "input": text,
-                    "voice": voice or "",
-                    "response_format": "mp3",
-                }
-                # 移除空 voice 字段
-                if not payload["voice"]:
-                    del payload["voice"]
+            # 保存音频文件
+            await asyncio.to_thread(response.stream_to_file, cache_path)
 
-                response = await client.post(self.api_url, json=payload, headers=headers)
+            # 裁剪开头 0.15 秒（消除嘟嘟声）
+            await asyncio.to_thread(self._trim_audio_head, cache_path, trim_seconds=0.15)
 
-                if response.status_code == 200:
-                    # 保存音频文件
-                    with open(cache_path, "wb") as f:
-                        f.write(response.content)
-                    print(f"[TTS] Audio saved: {cache_path} ({len(response.content)} bytes)")
-                    return cache_url
-                else:
-                    print(f"[TTS] API error: status={response.status_code}, body={response.text[:200]}")
-                    return None
+            print(f"[TTS] Audio saved: {cache_path}")
+            return cache_url
 
         except Exception as e:
             print(f"[TTS] Exception: {e}")
@@ -113,11 +128,11 @@ class TTSManager:
             text = f"{team_name}当前{new_score}分"
         else:
             text = f"{team_name}{action}{abs_delta}分，当前{new_score}分"
-        return await self.synthesize(text, voice="")
+        return await self.synthesize(text, voice="female")
 
     async def generate_ai_voice(self, text: str) -> Optional[str]:
         """生成 AI 对话回复语音"""
-        return await self.synthesize(text, voice="")
+        return await self.synthesize(text, voice="female")
 
 
 # 全局单例

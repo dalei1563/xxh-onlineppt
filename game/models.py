@@ -8,14 +8,14 @@ from typing import Optional, List
 class ScoreUpdate(BaseModel):
     """积分更新请求"""
     team_name: str = Field(..., description="组名")
-    delta: int = Field(..., description="分数变化（正数加分，负数减分）")
+    delta: int = Field(..., ge=-10000, le=10000, description="分数变化（正数加分，负数减分）")
     auto_tts: bool = Field(False, description="是否自动语音播报")
 
 
 class ScoreSet(BaseModel):
     """设置积分请求"""
     team_name: str = Field(..., description="组名")
-    score: int = Field(..., description="目标分数")
+    score: int = Field(..., ge=-1_000_000, le=1_000_000, description="目标分数")
 
 
 class TeamInfo(BaseModel):

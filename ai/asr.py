@@ -1,12 +1,12 @@
 """
-ASR (Automatic Speech Recognition) service - 智谱 API integration.
+ASR (Automatic Speech Recognition) service - 智谱 GLM-ASR API integration.
 
 Uses Zhipu GLM-ASR API to transcribe audio to text.
 """
 import os
-import json
+import tempfile
 from typing import Optional
-import httpx
+from zai import ZhipuAiClient
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,11 +20,11 @@ class ASRManager:
 
     def __init__(self):
         self.api_key = os.getenv("ZHIPU_API_KEY", "")
-        self.api_url = "https://open.bigmodel.cn/api/paas/v4/asr"
         self.model = os.getenv("ZHIPU_ASR_MODEL", "glm-asr-2512")
-        # 代理配置（仅用于调用智谱 API）
-        self.proxy = os.getenv("AI_PROXY", "") or None
+        self._client = None
         self._ready = bool(self.api_key)
+        if self._ready:
+            self._client = ZhipuAiClient(api_key=self.api_key)
 
     @property
     def is_ready(self) -> bool:
@@ -41,66 +41,48 @@ class ASRManager:
         Returns:
             识别出的文字，失败返回 None
         """
-        if not self._ready:
+        if not self._ready or not self._client:
             print("[ASR] API Key 未配置")
             return None
 
         try:
             print(f"[ASR] Calling Zhipu ASR API ({len(audio_data)} bytes)...")
 
-            client_kwargs = {}
-            if self.proxy:
-                client_kwargs["proxies"] = {
-                    "http://": self.proxy,
-                    "https://": self.proxy,
-                }
+            # 确定文件扩展名
+            ext = filename.lower().split(".")[-1] if "." in filename else "wav"
 
-            async with httpx.AsyncClient(**client_kwargs, timeout=120.0) as client:
-                headers = {
-                    "Authorization": f"Bearer {self.api_key}",
-                }
+            # 写入临时文件
+            with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as tmp:
+                tmp.write(audio_data)
+                tmp_path = tmp.name
 
-                # 确定 MIME 类型
-                ext = filename.lower().split(".")[-1] if "." in filename else "wav"
-                mime_map = {
-                    "wav": "audio/wav",
-                    "mp3": "audio/mpeg",
-                    "m4a": "audio/mp4",
-                    "ogg": "audio/ogg",
-                    "webm": "audio/webm",
-                    "amr": "audio/amr",
-                }
-                mime = mime_map.get(ext, "audio/wav")
+            try:
+                # 使用 zai-sdk 调用 ASR
+                with open(tmp_path, "rb") as audio_file:
+                    response = self._client.audio.transcriptions.create(
+                        model=self.model,
+                        file=audio_file,
+                    )
 
-                files = {
-                    "file": (filename, audio_data, mime),
-                }
-                data = {
-                    "model": self.model,
-                }
+                # 解析响应 - zai-sdk 返回 Completion 对象
+                text = None
+                if hasattr(response, 'text'):
+                    text = response.text
+                elif hasattr(response, 'data') and hasattr(response.data, 'text'):
+                    text = response.data.text
+                elif isinstance(response, dict):
+                    text = response.get("text", "") or response.get("data", {}).get("text", "")
 
-                response = await client.post(
-                    self.api_url,
-                    headers=headers,
-                    data=data,
-                    files=files,
-                )
-
-                if response.status_code == 200:
-                    result = response.json()
-                    text = result.get("data", {}).get("text", "")
-                    if text:
-                        print(f"[ASR] Transcribed: {text[:60]}...")
-                    else:
-                        print(f"[ASR] Empty result: {result}")
-                    return text or None
+                if text:
+                    print(f"[ASR] Transcribed: {text[:60]}...")
                 else:
-                    print(f"[ASR] API error: status={response.status_code}, body={response.text[:300]}")
-                    return None
+                    print(f"[ASR] Empty result: {response}")
+                return text or None
 
-        except httpx.TimeoutException:
-            print("[ASR] Request timeout")
-            return None
+            finally:
+                # 清理临时文件
+                os.unlink(tmp_path)
+
         except Exception as e:
             print(f"[ASR] Exception: {e}")
             return None

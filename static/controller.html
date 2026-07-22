@@ -1168,12 +1168,14 @@
                         self.handleGameControl(data);
                     });
 
-                    this.store.ws.on('ai_answer', function(data) {
-                        self.handleAIResponse(data);
+                    this.store.ws.on('ai_realtime_status', function(data) {
+                        self.handleRealtimeStatus(data);
                     });
-
-                    this.store.ws.on('ai_voice_status', function(data) {
-                        if (data.message) self.showToast(data.message);
+                    this.store.ws.on('ai_realtime_text_delta', function(data) {
+                        self.appendRealtimeText(data.delta);
+                    });
+                    this.store.ws.on('ai_realtime_text_done', function(data) {
+                        self.finishRealtimeText(data.text);
                     });
 
                     // ---- Init ----
@@ -1371,10 +1373,19 @@
                     var input = document.getElementById('aiQuestionInput');
                     var text = input.value.trim();
                     if (!text) return;
-                    this.addAIChatMessage('user', text);
                     input.value = '';
-                    this.store.send({ type: 'ai_question', text: text });
-                    this.addAIChatMessage('ai', '思考中...', true);
+                    if (!this._aiRealtimeReady) {
+                        this._pendingAIQuestion = text;
+                        this.addAIChatMessage('ai', '正在连接实时 AI…', true);
+                        this.store.send({ type: 'ai_realtime_start', audio: false });
+                        return;
+                    }
+                    this.sendRealtimeText(text);
+                },
+                sendRealtimeText: function(text) {
+                    this.addAIChatMessage('user', text);
+                    this.addAIChatMessage('ai', '', true);
+                    this.store.send({ type: 'ai_realtime_text', text: text });
                 },
                 addAIChatMessage: function(role, text, isTemp) {
                     var history = document.getElementById('aiChatHistory');
@@ -1395,12 +1406,47 @@
                 },
                 clearAIChat: function() {
                     document.getElementById('aiChatHistory').innerHTML = '<div class="chat-empty" id="aiChatEmpty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>开始与 AI 对话吧！</div></div>';
+                    this._aiRealtimeReady = false;
+                    this._pendingAIQuestion = null;
+                    this.store.send({ type: 'ai_realtime_clear', audio: false });
                 },
-                handleAIResponse: function(data) {
+                handleRealtimeStatus: function(data) {
+                    if (data.status === 'ready') {
+                        this._aiRealtimeReady = true;
+                        if (this._pendingAIQuestion) {
+                            var question = this._pendingAIQuestion;
+                            this._pendingAIQuestion = null;
+                            var placeholder = document.querySelector('#aiChatHistory .chat-message.temp');
+                            if (placeholder) placeholder.remove();
+                            this.sendRealtimeText(question);
+                        }
+                    } else if (data.status === 'error') {
+                        this._aiRealtimeReady = false;
+                        if (data.message) this.showToast(data.message);
+                    }
+                },
+                appendRealtimeText: function(delta) {
+                    if (!delta) return;
                     var history = document.getElementById('aiChatHistory');
                     var temp = history.querySelector('.chat-message.temp');
-                    if (temp) temp.remove();
-                    if (data.text) this.addAIChatMessage('ai', data.text);
+                    if (!temp) {
+                        this.addAIChatMessage('ai', '', true);
+                        temp = history.querySelector('.chat-message.temp');
+                    }
+                    var bubble = temp.querySelector('.bubble');
+                    bubble.textContent += delta;
+                    history.scrollTop = history.scrollHeight;
+                },
+                finishRealtimeText: function(text) {
+                    var history = document.getElementById('aiChatHistory');
+                    var temp = history.querySelector('.chat-message.temp');
+                    if (!temp) {
+                        if (text) this.addAIChatMessage('ai', text);
+                        return;
+                    }
+                    var bubble = temp.querySelector('.bubble');
+                    if (text) bubble.textContent = text;
+                    temp.classList.remove('temp');
                 },
                 toggleVoiceInput: function() {
                     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {

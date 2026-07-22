@@ -2,10 +2,14 @@
 WebSocket handler for TTS (Text-to-Speech) messages.
 """
 import asyncio
+import os
 from typing import Any
 
 from ai.tts import tts_manager
 from ws.protocol import TtsFileMsg, TtsBrowserMsg, TtsStopMsgOut
+
+
+MAX_TTS_TEXT_LENGTH = int(os.getenv("MAX_TTS_TEXT_LENGTH", "2000"))
 
 
 async def _generate_and_broadcast(manager: Any, text: str, voice: str = ""):
@@ -35,7 +39,7 @@ async def speak(manager: Any, text: str, voice: str = ""):
 async def handle_tts_speak(manager: Any, data: dict, client_id: int):
     text = data.get("text", "")
     voice = data.get("voice", "")
-    if not text:
+    if not isinstance(text, str) or not text or len(text) > MAX_TTS_TEXT_LENGTH:
         return
     print(f"[TTS] Speak requested: {text[:50]}... (client={client_id})")
     await speak(manager, text, voice)

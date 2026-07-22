@@ -5,7 +5,7 @@ WebSocket handler for slide control (翻页/跳转/全屏/视频重播)。
 from typing import Any
 
 from state.presentation import presentation_state
-from ws.protocol import GotoSlideMsgOut, FullscreenMsgOut, ReplayVideoMsgOut, DisplayModeMsgOut
+from ws.protocol import ErrorMsg, GotoSlideMsgOut, FullscreenMsgOut, ReplayVideoMsgOut, DisplayModeMsgOut
 
 
 async def handle_next(manager: Any, data: dict, client_id: int):
@@ -45,7 +45,12 @@ async def handle_goto(manager: Any, data: dict, client_id: int):
 
 async def handle_sync(manager: Any, data: dict, client_id: int):
     slide_id = str(data.get("slide", ""))
-    presentation_state.goto_slide(slide_id)
+    if not presentation_state.goto_slide(slide_id):
+        await manager.send_to_client(
+            client_id,
+            ErrorMsg(message=f"不存在的幻灯片: {slide_id}").model_dump(),
+        )
+        return
     await manager.broadcast(
         GotoSlideMsgOut(slide=slide_id, source=client_id).model_dump(),
         exclude=[client_id],

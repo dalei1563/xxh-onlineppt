@@ -6,6 +6,7 @@
     <title>2026年7月线下学习会 - AI主持演示</title>
     <link rel="stylesheet" href="/static/editor-style.css">
     <link rel="stylesheet" href="/static/css/slides.css">
+    <link rel="stylesheet" href="/static/css/ai-chat.css">
     <style>
         /* ===== 16:9 固定比例显示模式 =====
            改为 iframe 方案后，#slides-frame 自身按 100%×100% 撑满 .presentation；
@@ -58,7 +59,7 @@
 <body>
     <div class="presentation" id="presentation">
         <div class="slide-frame-wrap">
-            <iframe id="__slideFrame" title="当前幻灯片" referrerpolicy="no-referrer"></iframe>
+            <iframe id="__slideFrame" title="当前幻灯片" referrerpolicy="no-referrer" allow="microphone"></iframe>
         </div>
     </div>
 
@@ -117,6 +118,7 @@
                 lastTeamScores: {},
                 _currentFrameSlideId: '',
                 _currentFrameHasVideo: false,
+                _firstLoad: true,
 
                 init: function() {
                     if (isPreviewMode) {
@@ -254,6 +256,11 @@
                     if (window.audioUnlocked) return;
                     const overlay = document.getElementById('unmuteOverlay');
                     if (!overlay) return;
+                    // 页面首次加载时保持显示遮罩（忽略当前页是否含视频）
+                    if (this._firstLoad) {
+                        overlay.classList.add('show');
+                        return;
+                    }
                     if (this._currentFrameHasVideo) overlay.classList.add('show');
                     else overlay.classList.remove('show');
                 },
@@ -266,6 +273,7 @@
 
                     function unlockAudio() {
                         window.audioUnlocked = true;
+                        app._firstLoad = false;
                         overlay.classList.remove('show');
                         // 把当前 iframe 内视频取消静音继续播
                         try {
@@ -280,6 +288,11 @@
 
                     // 同时把 iframe onload 探测挂上，每次切到含视频页时自动展示 unmute-overlay
                     this._attachFrameOnloadProbe();
+
+                    // 页面加载时立即显示遮罩，让用户一开始就解除静音
+                    if (!window.audioUnlocked) {
+                        overlay.classList.add('show');
+                    }
                 },
 
                 // ---- 导航与控制 ----
@@ -435,7 +448,7 @@
                     if (!text) return;
                     const aiOverlay = document.createElement('div');
                     aiOverlay.style.cssText = 'position:fixed;top:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:white;padding:16px 28px;border-radius:16px;font-size:22px;font-weight:bold;z-index:10003;text-align:center;max-width:80%;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);animation:slideUpIn 0.4s ease;box-shadow:0 8px 32px rgba(0,0,0,0.5);line-height:1.6;';
-                    aiOverlay.innerHTML = '🤖 ' + text;
+                    aiOverlay.textContent = '🤖 ' + text;
                     document.body.appendChild(aiOverlay);
                     setTimeout(function() {
                         aiOverlay.style.transition = 'all 0.5s ease';

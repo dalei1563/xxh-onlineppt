@@ -1,12 +1,13 @@
-"""端到端冒烟测试：删除旧数据库后在全新进程运行。"""
-import os, sys
+"""端到端冒烟测试：使用临时数据库，不触碰活动现场数据。"""
+import atexit
+import os
+import shutil
+import tempfile
 
-# 删除旧数据库（在导入 main 之前）
-for f in ['data/gsp_scores.db', 'data/gsp_scores.db-shm', 'data/gsp_scores.db-wal']:
-    try:
-        os.remove(f)
-    except FileNotFoundError:
-        pass
+
+_test_data_dir = tempfile.mkdtemp(prefix="gsp-smoke-")
+os.environ["GSP_DB_PATH"] = os.path.join(_test_data_dir, "gsp_scores.db")
+atexit.register(lambda: shutil.rmtree(_test_data_dir, ignore_errors=True))
 
 from fastapi.testclient import TestClient
 from main import app
@@ -49,7 +50,8 @@ def test_http():
 
         # 6. 创建新幻灯片
         r = client.post('/api/slides/create', json={
-            'type': 'white',
+            # image 类型不写入 static/slides，确保测试不修改活动素材。
+            'type': 'image',
             'title': '冒烟测试页',
         })
         assert r.status_code == 200, r.text
@@ -69,7 +71,7 @@ def test_http():
         print(f'[HTTP] PUT /api/slides/{new_id} -> ok')
 
         # 9. 排序（把新页移到最前）
-        new_order = [new_id] + [s for s in r.json() if s != new_id]
+        new_order = [new_id] + order
         r = client.put('/api/slides/reorder', json={'order': new_order})
         assert r.status_code == 200, r.text
         print(f'[HTTP] PUT /api/slides/reorder -> ok')
@@ -113,4 +115,4 @@ def test_ws():
 if __name__ == '__main__':
     test_http()
     test_ws()
-    print('\n✅ 所有冒烟测试通过')
+    print('\n所有冒烟测试通过')

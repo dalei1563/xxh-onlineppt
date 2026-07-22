@@ -106,6 +106,37 @@ class AiVoiceStartMsg(InboundMessage):
     type: Literal["ai_voice_start"] = "ai_voice_start"
 
 
+class AiAudioDataMsg(InboundMessage):
+    """客户端上传的音频数据（base64 编码）"""
+    type: Literal["ai_audio_data"] = "ai_audio_data"
+    audio: str  # base64 编码的音频数据
+    format: str = "wav"  # 音频格式
+    done: bool = False  # 是否录音结束
+
+
+class AiRealtimeStartMsg(InboundMessage):
+    type: Literal["ai_realtime_start"] = "ai_realtime_start"
+    audio: bool = True
+
+
+class AiRealtimeAudioAppendMsg(InboundMessage):
+    type: Literal["ai_realtime_audio_append"] = "ai_realtime_audio_append"
+    audio: str
+
+
+class AiRealtimeTextMsg(InboundMessage):
+    type: Literal["ai_realtime_text"] = "ai_realtime_text"
+    text: str
+
+
+class AiRealtimeCancelMsg(InboundMessage):
+    type: Literal["ai_realtime_cancel"] = "ai_realtime_cancel"
+
+
+class AiRealtimeClearMsg(InboundMessage):
+    type: Literal["ai_realtime_clear"] = "ai_realtime_clear"
+
+
 # ========== 出站消息 ==========
 
 class OutboundMessage(BaseModel):
@@ -219,6 +250,47 @@ class AiAnswerMsg(OutboundMessage):
     type: Literal["ai_answer"] = "ai_answer"
     text: str
     client_id: Optional[int] = None
+
+
+class AiAudioStatusMsg(OutboundMessage):
+    """AI 音频处理状态"""
+    type: Literal["ai_audio_status"] = "ai_audio_status"
+    status: str  # recording/recording_stop/thinking/speaking/error
+    message: str = ""
+
+
+class AiAudioTranscriptMsg(OutboundMessage):
+    """语音识别结果"""
+    type: Literal["ai_audio_transcript"] = "ai_audio_transcript"
+    text: str
+    is_user: bool = True  # True=用户说的，False=AI说的
+
+
+class AiRealtimeStatusMsg(OutboundMessage):
+    type: Literal["ai_realtime_status"] = "ai_realtime_status"
+    status: str
+    message: str = ""
+
+
+class AiRealtimeTextDeltaMsg(OutboundMessage):
+    type: Literal["ai_realtime_text_delta"] = "ai_realtime_text_delta"
+    delta: str
+
+
+class AiRealtimeTextDoneMsg(OutboundMessage):
+    type: Literal["ai_realtime_text_done"] = "ai_realtime_text_done"
+    text: str
+
+
+class AiRealtimeAudioDeltaMsg(OutboundMessage):
+    type: Literal["ai_realtime_audio_delta"] = "ai_realtime_audio_delta"
+    audio: str
+    sample_rate: int = 24000
+
+
+class AiRealtimeUserTranscriptMsg(OutboundMessage):
+    type: Literal["ai_realtime_user_transcript"] = "ai_realtime_user_transcript"
+    text: str
 
 
 class ClientsCountMsg(OutboundMessage):

@@ -162,11 +162,14 @@ if __name__ == "__main__":
 
     host = os.getenv("SERVER_HOST", "0.0.0.0")
     port = int(os.getenv("SERVER_PORT", "8000"))
+    # 热重载会启动父/子两个进程；活动现场应默认单进程运行，避免重启后
+    # 遗留子进程继续占用 8000 端口。开发时可显式设置 SERVER_RELOAD=true。
+    reload_enabled = os.getenv("SERVER_RELOAD", "false").lower() in {"1", "true", "yes"}
 
     uvicorn.run(
         "main:app",
         host=host,
         port=port,
-        reload=True,
+        reload=reload_enabled,
         log_level="info",
     )

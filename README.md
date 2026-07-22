@@ -85,13 +85,27 @@ ZHIPU_TTS_MODEL=glm-4-voice
 ZHIPU_LLM_MODEL=glm-4-7b
 ZHIPU_ASR_MODEL=glm-asr-2512
 
+# GLM-Realtime（AI 幻灯片的实时语音对话）
+ZHIPU_REALTIME_MODEL=glm-realtime-flash
+ZHIPU_REALTIME_VOICE=tongtong
+
 # 代理配置（可选，用于调用智谱 API）
 AI_PROXY=http://your_proxy:port
 
 # 服务器配置
 SERVER_HOST=0.0.0.0
 SERVER_PORT=8000
+# 现场运行保持 false；仅开发调试时设为 true
+SERVER_RELOAD=false
+
+# 可选：将运行时数据库放在项目目录之外，便于备份或部署持久化卷
+GSP_DB_PATH=/path/to/gsp_scores.db
+
+# 可选：单个图片/视频上传上限，默认 100 MB
+MAX_UPLOAD_SIZE_BYTES=104857600
 ```
+
+> 首次启动没有数据库时，系统会从 `editor/default_slides.py` 恢复受版本管理的默认活动课件。运行时的积分和编辑结果仍保存在数据库中，请按活动需要备份该文件。
 
 ## 使用说明
 

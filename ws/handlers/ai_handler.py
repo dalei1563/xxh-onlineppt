@@ -1,112 +1,69 @@
-"""
-WebSocket handler for AI voice conversation.
-文本提问 -> LLM -> TTS -> 广播文字与语音。
-"""
+"""WebSocket handlers for server-relayed GLM-Realtime conversations."""
 import asyncio
-from typing import Any, Dict, List
+from typing import Any
 
-from ai.chat import ai_chat_manager
-from ai.tts import tts_manager
-from ws.protocol import AiVoiceStatusMsg, AiAnswerMsg, TtsFileMsg, TtsBrowserMsg
-
-
-# 每个客户端的对话历史
-_conversation_history: Dict[int, List[dict]] = {}
+from ai.realtime import realtime_manager
+from ws.protocol import ErrorMsg
 
 
-async def _generate_tts_and_broadcast(manager: Any, text: str):
-    """异步生成 TTS 音频并广播"""
-    if not text:
-        return
-    audio_url = await tts_manager.synthesize(text, voice="")
-    if audio_url:
-        await manager.broadcast(TtsFileMsg(url=audio_url, text=text).model_dump())
-    else:
-        await manager.broadcast(TtsBrowserMsg(text=text).model_dump())
+async def handle_realtime_start(manager: Any, data: dict, client_id: int):
+    """Create a private upstream Realtime session for this browser client."""
+    audio_enabled = bool(data.get("audio", True))
+    turn_mode = data.get("mode", "realtime")
+
+    async def send_to_client(message: dict):
+        await manager.send_to_client(client_id, message)
+
+    await realtime_manager.start(client_id, send_to_client, audio_enabled=audio_enabled, turn_mode=turn_mode)
 
 
-async def handle_ai_question(manager: Any, data: dict, client_id: int):
-    question = data.get("text", "")
-    if not question:
-        return
-
-    print(f"[AI Voice] Question from client {client_id}: {question[:50]}...")
-
-    history = _conversation_history.get(client_id, [])
-    if len(history) > 30:
-        history = history[-30:]
-
-    await manager.send_to_client(
-        client_id,
-        AiVoiceStatusMsg(status="thinking").model_dump(),
-    )
-
-    reply = await ai_chat_manager.chat(question, history)
-
-    if reply:
-        history.append({"role": "user", "content": question})
-        history.append({"role": "assistant", "content": reply})
-        _conversation_history[client_id] = history
-
-        asyncio.create_task(_generate_tts_and_broadcast(manager, reply))
-
-        await manager.broadcast(
-            AiAnswerMsg(text=reply, client_id=client_id).model_dump()
-        )
-    else:
+async def handle_realtime_audio_append(manager: Any, data: dict, client_id: int):
+    if not await realtime_manager.append_audio(client_id, data.get("audio")):
         await manager.send_to_client(
             client_id,
-            AiAnswerMsg(text="抱歉，我暂时无法回答这个问题，请稍后再试。").model_dump(),
+            ErrorMsg(message="实时会话不可用，请重新开始对话").model_dump(),
         )
 
 
-async def handle_ai_voice_audio(manager: Any, data: dict, client_id: int):
-    """音频输入功能暂通过 REST 实现，WS 通道提示用户先用文字"""
-    await manager.send_to_client(
-        client_id,
-        AiVoiceStatusMsg(
-            status="error",
-            message="音频输入功能正在完善中，请先使用文字输入。",
-        ).model_dump(),
-    )
+async def handle_realtime_audio_commit(manager: Any, data: dict, client_id: int):
+    if not await realtime_manager.commit_audio(client_id):
+        await manager.send_to_client(
+            client_id,
+            ErrorMsg(message="实时会话不可用，请重新开始对话").model_dump(),
+        )
 
 
-async def handle_ai_voice_clear(manager: Any, data: dict, client_id: int):
-    if client_id in _conversation_history:
-        del _conversation_history[client_id]
-    await manager.send_to_client(
-        client_id,
-        AiVoiceStatusMsg(status="cleared", message="对话历史已清除").model_dump(),
-    )
+async def handle_realtime_text(manager: Any, data: dict, client_id: int):
+    if not await realtime_manager.send_text(client_id, data.get("text")):
+        await manager.send_to_client(
+            client_id,
+            ErrorMsg(message="实时会话不可用，请重新开始对话").model_dump(),
+        )
+
+
+async def handle_realtime_cancel(manager: Any, data: dict, client_id: int):
+    await realtime_manager.cancel(client_id)
+
+
+async def handle_realtime_clear(manager: Any, data: dict, client_id: int):
+    """Discard upstream conversation memory by creating a fresh session."""
+    await realtime_manager.close(client_id)
+    await handle_realtime_start(manager, data, client_id)
 
 
 def _on_client_disconnect(client_id: int):
-    """客户端断开时清理其对话历史，避免：
-    1. 内存随连接累积泄漏；
-    2. 新连接复用同 id 继承旧用户的对话（在使用 id(websocket) 时会发生）。
-    现已改用唯一自增 client_id，但保留清理以确保长期内存稳定。
-    """
-    _conversation_history.pop(client_id, None)
+    """The connection manager has a synchronous callback interface."""
+    asyncio.create_task(realtime_manager.close(client_id))
 
 
 def register_ai_disconnect_handler(manager):
-    """向连接管理器注册 AI 领域的断开清理回调"""
     manager.register_disconnect_callback(_on_client_disconnect)
 
 
-async def handle_ai_voice_start(manager: Any, data: dict, client_id: int):
-    await manager.send_to_client(
-        client_id,
-        AiVoiceStatusMsg(
-            status="ready",
-            message="AI 语音对话已就绪，请输入您的问题",
-        ).model_dump(),
-    )
-
-
 def register_ai_handlers(router):
-    """向路由器注册所有 AI 语音消息"""
-    router.register("ai_question", handle_ai_question)
-    router.register("ai_voice_audio", handle_ai_voice_audio)
-    router.register("ai_voice_clear", handle_ai_voice_clear)
-    router.register("ai_voice_start", handle_ai_voice_start)
+    router.register("ai_realtime_start", handle_realtime_start)
+    router.register("ai_realtime_audio_append", handle_realtime_audio_append)
+    router.register("ai_realtime_audio_commit", handle_realtime_audio_commit)
+    router.register("ai_realtime_text", handle_realtime_text)
+    router.register("ai_realtime_cancel", handle_realtime_cancel)
+    router.register("ai_realtime_clear", handle_realtime_clear)

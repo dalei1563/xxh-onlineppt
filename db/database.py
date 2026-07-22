@@ -5,9 +5,11 @@ import os
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# 数据库文件路径
-DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
-DB_PATH = os.path.join(DB_DIR, "gsp_scores.db")
+# 数据库文件路径。GSP_DB_PATH 便于部署和测试使用隔离的数据文件；
+# 未配置时保持原有的项目内 data/ 默认位置。
+_default_db_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+DB_PATH = os.path.abspath(os.getenv("GSP_DB_PATH", os.path.join(_default_db_dir, "gsp_scores.db")))
+DB_DIR = os.path.dirname(DB_PATH)
 
 # 确保 data 目录存在
 os.makedirs(DB_DIR, exist_ok=True)
