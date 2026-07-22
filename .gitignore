@@ -12,10 +12,20 @@ data/*.db-journal
 
 # 本地运行/调试产物
 .env
-server.log
-server.err.log
+server*.log
 static/ocr_output/
+static/thumbnails/
 *.bak
+
+# 编辑器上传的视频保留在演示电脑本地；GitHub 单文件上限为 100 MB。
+# 已经被 Git 跟踪的历史小视频不受这些规则影响。
+static/uploads/*.mp4
+static/uploads/*.webm
+static/uploads/*.ogg
+static/uploads/*.mov
+static/uploads/*.avi
+static/uploads/*.mkv
+static/uploads/*.m4v
 
 # 本地大文件与种子源
 temp.pptx

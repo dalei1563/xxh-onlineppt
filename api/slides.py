@@ -2,19 +2,21 @@
 Slides REST API - 幻灯片元数据与内容接口。
 内容以独立文件存储，REST 负责元数据 CRUD 和文件读取。
 """
+import asyncio
 import os
 import re
 import uuid
 from pathlib import Path
 from typing import List
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy.orm import Session
 
 from db.database import get_db
 from editor.models import SlideInfo, SlideReorder, SlideUpdate, SlideCreate
 from db.models import SlideMeta
 from services.slide_service import slide_service
+from services.thumbnail_service import thumbnail_service
 from state.presentation import presentation_state
 from ws.handler import manager as ws_manager
 from ws.protocol import (
@@ -28,8 +30,10 @@ from ws.protocol import (
 router = APIRouter(prefix="/api/slides", tags=["slides"])
 
 UPLOADS_DIR = Path(__file__).parent.parent / "static" / "uploads"
-MAX_UPLOAD_SIZE_BYTES = int(os.getenv("MAX_UPLOAD_SIZE_BYTES", 100 * 1024 * 1024))
-UPLOAD_CHUNK_SIZE = 1024 * 1024
+# 0 表示不限制。视频素材常常数百 MB，默认不应因为演示现场素材大小而拒绝上传。
+MAX_UPLOAD_SIZE_BYTES = int(os.getenv("MAX_UPLOAD_SIZE_BYTES", "0"))
+# 较大的分块可减少 600MB+ 文件上传时的磁盘写入/协程切换次数，同时只占用有限内存。
+UPLOAD_CHUNK_SIZE = 8 * 1024 * 1024
 
 
 # ---- 集合路由 ----
@@ -152,7 +156,7 @@ async def upload_slide_media(
             size = 0
             while chunk := await file.read(UPLOAD_CHUNK_SIZE):
                 size += len(chunk)
-                if size > MAX_UPLOAD_SIZE_BYTES:
+                if MAX_UPLOAD_SIZE_BYTES > 0 and size > MAX_UPLOAD_SIZE_BYTES:
                     raise HTTPException(
                         status_code=413,
                         detail=f"文件不能超过 {MAX_UPLOAD_SIZE_BYTES // (1024 * 1024)} MB",
@@ -365,6 +369,28 @@ async def render_slide_page(slide_id: str, db: Session = Depends(get_db)):
     return HTMLResponse(document)
 
 
+@router.get("/{slide_id}/thumbnail")
+async def get_slide_thumbnail(
+    slide_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """返回后台生成并缓存的静态缩略图，避免编辑器加载完整幻灯片。"""
+    slide = db.query(SlideMeta).filter(SlideMeta.slide_id == slide_id).first()
+    if not slide:
+        raise HTTPException(status_code=404, detail=f"未找到幻灯片: {slide_id}")
+    path = await asyncio.to_thread(
+        thumbnail_service.ensure_thumbnail,
+        slide,
+        str(request.base_url).rstrip("/"),
+    )
+    return FileResponse(
+        path,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
 @router.put("/{slide_id}")
 async def update_slide(slide_id: str, data: SlideUpdate, db: Session = Depends(get_db)):
     """更新幻灯片元数据"""
@@ -386,6 +412,7 @@ async def delete_slide(slide_id: str, db: Session = Depends(get_db)):
     success = slide_service.delete_slide(db, slide_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"未找到幻灯片: {slide_id}")
+    thumbnail_service.invalidate(slide_id)
 
     order = slide_service.get_slide_order(db)
     presentation_state.set_slide_order(order)

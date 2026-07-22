@@ -7,6 +7,7 @@ import tempfile
 
 _test_data_dir = tempfile.mkdtemp(prefix="gsp-smoke-")
 os.environ["GSP_DB_PATH"] = os.path.join(_test_data_dir, "gsp_scores.db")
+os.environ["THUMBNAIL_WARMUP"] = "false"
 atexit.register(lambda: shutil.rmtree(_test_data_dir, ignore_errors=True))
 
 from fastapi.testclient import TestClient

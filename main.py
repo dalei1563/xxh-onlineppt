@@ -8,6 +8,8 @@ FastAPI 服务器，提供：
 """
 import os
 import sys
+import asyncio
+from contextlib import suppress
 from pathlib import Path
 
 # 确保项目根目录在 sys.path 中
@@ -25,6 +27,7 @@ load_dotenv()
 from db.database import init_db, SessionLocal
 from services.slide_service import slide_service
 from services.game_service import game_service
+from services.thumbnail_service import thumbnail_service
 from state.presentation import presentation_state
 from ws.handler import manager as ws_manager
 
@@ -40,6 +43,7 @@ async def lifespan(app: FastAPI):
     init_db()
     print("[DB] Database initialized")
 
+    thumbnail_task = None
     db = SessionLocal()
     try:
         game_service.init_teams(db)
@@ -55,6 +59,16 @@ async def lifespan(app: FastAPI):
         if order:
             presentation_state.goto_slide(order[0])
         print(f"[State] Presentation state initialized: {presentation_state.total_slides} slides")
+
+        if os.getenv("THUMBNAIL_WARMUP", "true").lower() in {"1", "true", "yes"}:
+            thumbnail_slides = slide_service.get_all_slides(db)
+            port = int(os.getenv("SERVER_PORT", "8000"))
+            thumbnail_task = asyncio.create_task(
+                thumbnail_service.warm_cache(
+                    thumbnail_slides,
+                    f"http://127.0.0.1:{port}",
+                )
+            )
     finally:
         db.close()
 
@@ -70,6 +84,10 @@ async def lifespan(app: FastAPI):
     yield
 
     # ---- shutdown ----
+    if thumbnail_task:
+        thumbnail_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await thumbnail_task
     print("[Server] Shutting down...")
 
 
