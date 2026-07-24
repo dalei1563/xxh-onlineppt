@@ -3,1530 +3,767 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GSP 学习会 · AI 主持控制台</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>GSP 学习会 · 演示控制台</title>
     <style>
-        /* ===== CSS Variables ===== */
         :root {
             --bg-deep: #0b1120;
             --bg-base: #0f172a;
-            --bg-elevated: #1a243b;
-            --bg-card: rgba(255, 255, 255, 0.05);
-            --bg-card-hover: rgba(255, 255, 255, 0.08);
-            --bg-active: rgba(34, 197, 94, 0.12);
+            --bg-elevated: #182238;
+            --bg-card: rgba(255, 255, 255, 0.055);
+            --bg-active: rgba(34, 197, 94, 0.13);
             --foreground: #f1f5f9;
-            --foreground-muted: #94a3b8;
-            --foreground-dim: #64748b;
+            --muted: #94a3b8;
+            --dim: #64748b;
             --accent: #22c55e;
+            --accent-dark: #16a34a;
             --accent-glow: rgba(34, 197, 94, 0.25);
-            --accent-gradient: linear-gradient(135deg, #22c55e, #16a34a);
-            --danger: #ef4444;
-            --danger-glow: rgba(239, 68, 68, 0.2);
-            --warning: #f59e0b;
-            --warning-glow: rgba(245, 158, 11, 0.2);
-            --border: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(255, 255, 255, 0.15);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 20px;
-            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.04);
-            --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
-            --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            --border: rgba(255, 255, 255, 0.09);
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --radius-sm: 9px;
+            --radius-md: 13px;
+            --radius-lg: 18px;
             --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== Reset ===== */
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; overflow: hidden; }
         body {
-            font-family: var(--font);
-            background: var(--bg-deep);
-            color: var(--foreground);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             display: flex;
             flex-direction: column;
+            color: var(--foreground);
+            background: var(--bg-deep);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            -webkit-font-smoothing: antialiased;
             user-select: none;
         }
-        input, textarea, button { font-family: inherit; }
+        button, input, textarea { font: inherit; }
+        button { -webkit-tap-highlight-color: transparent; }
 
-        /* ===== Header ===== */
         .app-header {
-            flex-shrink: 0;
-            padding: 12px 16px;
-            padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
-            background: var(--bg-base);
-            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            z-index: 10;
-        }
-        .app-header .brand {
-            display: flex;
-            align-items: center;
             gap: 10px;
-        }
-        .app-header .brand-icon {
-            width: 32px; height: 32px;
-            background: var(--accent-gradient);
-            border-radius: var(--radius-sm);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; font-weight: 800; color: #fff;
             flex-shrink: 0;
+            padding: calc(env(safe-area-inset-top, 0px) + 11px) 15px 11px;
+            background: var(--bg-base);
+            border-bottom: 1px solid var(--border);
         }
-        .app-header .brand-text {
-            line-height: 1.2;
+        .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .brand-icon {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: #fff;
+            font-weight: 800;
         }
-        .app-header .brand-name {
-            font-size: 15px; font-weight: 700; color: var(--foreground);
-        }
-        .app-header .brand-sub {
-            font-size: 11px; color: var(--foreground-muted); font-weight: 500;
-        }
-
-        .header-status {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .status-badge {
+        .brand-name { font-size: 15px; font-weight: 700; }
+        .brand-sub { margin-top: 1px; color: var(--muted); font-size: 11px; }
+        .header-status { display: flex; align-items: center; gap: 7px; }
+        .status-badge, .page-chip {
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 5px 10px;
-            border-radius: 20px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.06);
+            color: var(--muted);
             font-size: 11px;
             font-weight: 600;
-            background: rgba(255,255,255,0.06);
-            color: var(--foreground-muted);
-            transition: var(--transition);
-        }
-        .status-badge .dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: #ef4444;
-            transition: var(--transition);
-        }
-        .status-badge .dot.connected { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
-        .status-badge .dot.connecting { background: var(--warning); animation: pulse-dot 1s ease infinite; }
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .page-chip {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background: var(--bg-card);
-            color: var(--foreground-muted);
             white-space: nowrap;
         }
-        .page-chip strong {
-            color: var(--foreground);
-            font-size: 14px;
-        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #ef4444; }
+        .status-dot.connected { background: var(--accent); box-shadow: 0 0 7px var(--accent); }
+        .status-dot.connecting { background: #f59e0b; animation: pulse 1s ease infinite; }
+        .page-chip strong { color: var(--foreground); font-size: 13px; }
+        @keyframes pulse { 50% { opacity: .35; } }
 
-        /* ===== Main Content Area ===== */
-        .tab-content-wrapper {
-            flex: 1;
-            overflow: hidden;
-            position: relative;
-        }
-        .tab-pane {
+        .content { position: relative; flex: 1; overflow: hidden; }
+        .pane {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 16px 16px 24px;
+            inset: 0;
+            overflow: auto;
+            padding: 16px 15px 24px;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(8px);
-            transition: opacity 250ms ease, transform 250ms ease, visibility 0ms 250ms;
+            transform: translateY(6px);
+            transition: opacity 180ms ease, transform 180ms ease, visibility 0ms 180ms;
             -webkit-overflow-scrolling: touch;
         }
-        .tab-pane.active {
+        .pane.active {
             opacity: 1;
             visibility: visible;
-            transform: translateY(0);
-            transition: opacity 300ms ease, transform 300ms ease, visibility 0ms 0ms;
+            transform: none;
+            transition-delay: 0ms;
+        }
+        .pane::-webkit-scrollbar { width: 3px; }
+        .pane::-webkit-scrollbar-thumb { border-radius: 3px; background: var(--border-hover); }
+
+        .slide-carousel {
+            display: grid;
+            grid-template-columns: minmax(0, .72fr) minmax(0, 1.4fr) minmax(0, .72fr);
+            align-items: center;
+            gap: 9px;
+            min-height: 150px;
+            padding: 4px 0 12px;
+        }
+        .thumb-card {
+            position: relative;
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-elevated);
+            box-shadow: 0 8px 22px rgba(0,0,0,.2);
+        }
+        button.thumb-card {
+            padding: 0;
+            color: inherit;
+            cursor: pointer;
+            transition: transform var(--transition), opacity var(--transition), border-color var(--transition);
+        }
+        button.thumb-card:active { transform: scale(.96); }
+        .thumb-card.side { opacity: .62; }
+        .thumb-card.side:hover { opacity: .9; border-color: var(--border-hover); }
+        .thumb-card.current {
+            z-index: 1;
+            border-color: rgba(34,197,94,.7);
+            box-shadow: 0 12px 32px rgba(0,0,0,.32), 0 0 0 1px rgba(34,197,94,.16);
+        }
+        .thumb-card img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            background: #111827;
+        }
+        .thumb-card.side img { filter: brightness(.82); }
+        /* 保留三列网格占位，但彻底隐藏边界页不存在的侧卡片。
+           opacity 可规避部分浏览器在复用 img 后残留破图图标的问题。 */
+        .thumb-card.is-empty {
+            visibility: visible;
+            opacity: 0 !important;
+            pointer-events: none;
+            transition: none;
+        }
+        .thumb-caption {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            overflow: hidden;
+            padding: 12px 8px 6px;
+            background: linear-gradient(transparent, rgba(3,7,18,.88));
+            color: rgba(255,255,255,.82);
+            font-size: 9px;
+            font-weight: 650;
+            text-align: center;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .thumb-current-info {
+            padding: 7px 9px 8px;
+            background: rgba(15,23,42,.96);
+            text-align: center;
+        }
+        .thumb-current-title {
+            overflow: hidden;
+            font-size: 12px;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .thumb-current-meta {
+            overflow: hidden;
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 9px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        /* ===== Bottom Tab Bar ===== */
-        .tab-bar {
-            flex-shrink: 0;
-            display: flex;
-            background: var(--bg-base);
-            border-top: 1px solid var(--border);
-            padding-bottom: var(--safe-bottom);
-            z-index: 10;
+        .primary-nav {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
         }
-        .tab-item {
-            flex: 1;
+        .primary-nav button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 72px;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: var(--radius-lg);
+            background: var(--bg-elevated);
+            color: var(--foreground);
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 750;
+            transition: transform var(--transition), background var(--transition), opacity var(--transition);
+        }
+        .primary-nav button:last-child {
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            box-shadow: 0 7px 22px var(--accent-glow);
+            color: #fff;
+        }
+        .primary-nav button:active { transform: scale(.97); }
+        .primary-nav button:disabled { cursor: default; opacity: .36; box-shadow: none; }
+        .primary-nav svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+
+        .utility-nav {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 7px;
+            margin-bottom: 13px;
+        }
+        .utility-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 3px;
-            padding: 8px 4px;
-            padding-top: 10px;
-            border: none;
-            background: transparent;
-            color: var(--foreground-muted);
-            font-size: 10px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: color var(--transition);
-            -webkit-tap-highlight-color: transparent;
-            position: relative;
-            min-height: 52px;
-        }
-        .tab-item svg {
-            width: 22px; height: 22px;
-            stroke: currentColor;
-            stroke-width: 1.8;
-            fill: none;
-            transition: var(--transition);
-        }
-        .tab-item::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 20%;
-            right: 20%;
-            height: 2px;
-            border-radius: 0 0 2px 2px;
-            background: var(--accent);
-            opacity: 0;
-            transition: var(--transition);
-        }
-        .tab-item.active {
-            color: var(--accent);
-        }
-        .tab-item.active::after {
-            opacity: 1;
-        }
-        .tab-item:active {
-            opacity: 0.7;
-        }
-
-        /* ===== Common Components ===== */
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        .section-header svg {
-            width: 18px; height: 18px;
-            stroke: var(--accent);
-            stroke-width: 2;
-            fill: none;
-            flex-shrink: 0;
-        }
-        .section-header h2 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--foreground);
-        }
-        .section-header .badge {
-            margin-left: auto;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 600;
-            background: var(--bg-card);
-            color: var(--foreground-muted);
-        }
-
-        .card {
-            background: var(--bg-card);
+            gap: 4px;
+            min-height: 56px;
+            padding: 7px 3px;
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
-            padding: 14px;
-            margin-bottom: 12px;
-            backdrop-filter: blur(8px);
-            transition: border-color var(--transition);
-        }
-        .card:active {
-            border-color: var(--border-hover);
-        }
-        .card-label {
-            font-size: 11px;
+            background: var(--bg-card);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 10px;
             font-weight: 600;
-            color: var(--foreground-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
+            transition: var(--transition);
         }
+        .utility-btn:active { transform: scale(.95); background: rgba(255,255,255,.1); }
+        .utility-btn:disabled { opacity: .35; }
+        .utility-btn.active { border-color: var(--accent); background: var(--bg-active); color: var(--accent); }
+        .utility-btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; }
 
-        /* ===== Buttons ===== */
+        .card {
+            margin-bottom: 12px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+        }
+        .card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
+        .card-title { font-size: 13px; font-weight: 700; }
+        .card-hint { color: var(--dim); font-size: 10px; }
+
+        .chapter-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chapter-btn {
+            max-width: 100%;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255,255,255,.035);
+            color: var(--foreground);
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition);
+        }
+        .chapter-btn:active { transform: scale(.97); }
+        .chapter-btn.active { border-color: var(--accent); background: var(--bg-active); }
+        .chapter-name {
+            display: block;
+            overflow: hidden;
+            font-size: 11px;
+            font-weight: 650;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chapter-btn.active .chapter-name { color: var(--accent); }
+        .empty-chapters { grid-column: 1 / -1; padding: 13px; color: var(--dim); font-size: 12px; text-align: center; }
+        .input, .textarea {
+            width: 100%;
+            min-width: 0;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            outline: none;
+            background: rgba(255,255,255,.04);
+            color: var(--foreground);
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .input { min-height: 42px; padding: 9px 12px; font-size: 14px; font-weight: 700; }
+        .textarea { min-height: 96px; padding: 11px 12px; resize: vertical; font-size: 14px; line-height: 1.55; }
+        .input:focus, .textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .input::placeholder, .textarea::placeholder { color: var(--dim); }
+
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 10px 18px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition);
-            -webkit-tap-highlight-color: transparent;
-            white-space: nowrap;
-            min-height: 40px;
-        }
-        .btn:active { transform: scale(0.96); }
-        .btn-primary {
-            background: var(--accent-gradient);
-            color: #fff;
-            box-shadow: 0 2px 8px var(--accent-glow);
-        }
-        .btn-primary:hover { box-shadow: 0 4px 16px var(--accent-glow); }
-        .btn-secondary {
-            background: rgba(255,255,255,0.08);
-            color: var(--foreground);
-            border: 1px solid var(--border);
-        }
-        .btn-secondary:hover { background: rgba(255,255,255,0.12); }
-        .btn-danger {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-        .btn-danger:hover { background: rgba(239, 68, 68, 0.25); }
-        .btn-warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--warning);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-        .btn-warning:hover { background: rgba(245, 158, 11, 0.25); }
-        .btn-sm { padding: 6px 12px; font-size: 11px; min-height: 32px; }
-        .btn-lg { padding: 14px 24px; font-size: 15px; min-height: 48px; }
-        .btn-block { width: 100%; }
-        .btn-icon {
-            width: 40px; height: 40px; padding: 0;
-            border-radius: var(--radius-sm);
-        }
-        .btn-icon svg {
-            width: 20px; height: 20px;
-            stroke: currentColor;
-            stroke-width: 2;
-            fill: none;
-        }
-        .btn-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .btn-row .btn { flex: 1; min-width: 0; }
-
-        /* ===== Input ===== */
-        .input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            background: rgba(255,255,255,0.04);
-            color: var(--foreground);
-            font-size: 14px;
-            font-weight: 500;
-            outline: none;
-            transition: border-color var(--transition), box-shadow var(--transition);
             min-height: 42px;
-        }
-        .input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-        .input::placeholder { color: var(--foreground-dim); }
-        .input-group {
-            display: flex;
-            gap: 8px;
-        }
-        .input-group .input { flex: 1; }
-        .textarea {
-            width: 100%;
-            min-height: 76px;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
+            padding: 9px 17px;
+            border: 0;
             border-radius: var(--radius-sm);
-            background: rgba(255,255,255,0.04);
-            color: var(--foreground);
-            font-size: 14px;
-            font-weight: 500;
-            resize: vertical;
-            outline: none;
-            transition: border-color var(--transition), box-shadow var(--transition);
-            line-height: 1.6;
-        }
-        .textarea:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-        .textarea::placeholder { color: var(--foreground-dim); }
-
-        /* ===== Current Page Display ===== */
-        .page-hero {
-            text-align: center;
-            padding: 12px 0 16px;
-        }
-        .page-hero .page-number {
-            font-size: 64px;
-            font-weight: 800;
-            color: var(--foreground);
-            line-height: 1;
-            letter-spacing: -2px;
-        }
-        .page-hero .page-total {
-            font-size: 14px;
-            color: var(--foreground-muted);
-            font-weight: 500;
-            margin-top: 4px;
-        }
-        .page-hero .page-label {
-            font-size: 12px;
-            color: var(--foreground-dim);
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-
-        /* Navigation grid */
-        .nav-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        .nav-grid .nav-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 14px 8px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            background: var(--bg-card);
-            color: var(--foreground);
             cursor: pointer;
-            transition: all var(--transition);
-            -webkit-tap-highlight-color: transparent;
-            min-height: 64px;
-        }
-        .nav-grid .nav-btn:active { transform: scale(0.96); background: var(--bg-card-hover); }
-        .nav-grid .nav-btn svg {
-            width: 24px; height: 24px;
-            stroke: currentColor;
-            stroke-width: 1.8;
-            fill: none;
-        }
-        .nav-grid .nav-btn .nav-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--foreground-muted);
-        }
-        .nav-grid .nav-btn.primary-action {
-            background: var(--accent-gradient);
-            border-color: transparent;
-            color: #fff;
-            box-shadow: 0 4px 16px var(--accent-glow);
-        }
-        .nav-grid .nav-btn.primary-action .nav-label { color: rgba(255,255,255,0.8); }
-        .nav-grid .nav-btn.primary-action:active { box-shadow: 0 2px 8px var(--accent-glow); }
-
-        .nav-btn-row {
-            display: flex;
-            gap: 8px;
-        }
-        .nav-btn-row .nav-btn {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            padding: 12px 8px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            background: var(--bg-card);
-            color: var(--foreground);
-            cursor: pointer;
-            transition: all var(--transition);
-            -webkit-tap-highlight-color: transparent;
-            min-height: 56px;
-        }
-        .nav-btn-row .nav-btn:active { transform: scale(0.96); background: var(--bg-card-hover); }
-        .nav-btn-row .nav-btn svg {
-            width: 20px; height: 20px;
-            stroke: currentColor;
-            stroke-width: 1.8;
-            fill: none;
-        }
-        .nav-btn-row .nav-btn .nav-label {
-            font-size: 10px;
-            font-weight: 600;
-            color: var(--foreground-muted);
-        }
-
-        /* ===== Score Cards ===== */
-        .score-team {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            margin-bottom: 8px;
-            transition: border-color var(--transition);
-        }
-        .score-team .team-color {
-            width: 3px; height: 32px;
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
-        .score-team .team-info { flex: 1; min-width: 0; }
-        .score-team .team-name {
-            font-size: 14px; font-weight: 700; color: var(--foreground);
-        }
-        .score-team .team-score {
-            font-size: 28px; font-weight: 800;
-            color: var(--foreground);
-            letter-spacing: -1px;
-            min-width: 44px;
-            text-align: center;
-        }
-        .score-team .score-actions {
-            display: flex;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-        .score-team .score-actions button {
-            width: 34px; height: 34px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all var(--transition);
-            -webkit-tap-highlight-color: transparent;
-            color: #fff;
-        }
-        .score-team .score-actions button:active { transform: scale(0.9); }
-        .score-team .score-actions .btn-add { background: var(--accent); }
-        .score-team .score-actions .btn-sub { background: var(--danger); }
-        .score-team .score-actions .btn-more {
-            background: rgba(255,255,255,0.1);
-            color: var(--foreground-muted);
-            font-size: 16px;
-            width: 28px;
-        }
-
-        /* ===== Leaderboard ===== */
-        .leaderboard-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border);
-        }
-        .leaderboard-item:last-child { border-bottom: none; }
-        .leaderboard-item .rank {
-            width: 24px; height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-        .rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
-        .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
-        .rank-3 { background: linear-gradient(135deg, #e67e22, #d35400); color: #fff; }
-        .rank-other { background: rgba(255,255,255,0.08); color: var(--foreground-muted); }
-        .leaderboard-item .lb-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--foreground); }
-        .leaderboard-item .lb-score { font-size: 15px; font-weight: 700; color: var(--accent); }
-
-        /* ===== TTS Presets ===== */
-        .tts-presets {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        .tts-preset-btn {
-            padding: 6px 12px;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            background: rgba(255,255,255,0.04);
-            color: var(--foreground-muted);
-            font-size: 11px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all var(--transition);
-            -webkit-tap-highlight-color: transparent;
-        }
-        .tts-preset-btn:active {
-            background: var(--accent);
-            color: #fff;
-            border-color: var(--accent);
-        }
-        .tts-preset-btn:hover {
-            border-color: var(--border-hover);
-            color: var(--foreground);
-        }
-
-        /* ===== Game ===== */
-        .game-status-card {
-            text-align: center;
-            padding: 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            margin-bottom: 16px;
-        }
-        .game-status-card .status-icon {
-            font-size: 36px;
-            margin-bottom: 8px;
-        }
-        .game-status-card .status-text {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--foreground-muted);
-        }
-        .game-status-card .round-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--accent);
-            margin-top: 4px;
-        }
-
-        .game-team-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        .game-team-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 12px;
-            text-align: center;
-            transition: border-color var(--transition);
-        }
-        .game-team-card .gt-name {
-            font-size: 15px; font-weight: 700;
-            margin-bottom: 2px;
-        }
-        .game-team-card .gt-score {
-            font-size: 28px; font-weight: 800;
-            color: var(--foreground);
-            letter-spacing: -1px;
-            margin: 6px 0;
-        }
-        .game-team-card .gt-actions {
-            display: flex;
-            gap: 4px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .game-team-card .gt-actions button {
-            width: 36px; height: 36px;
-            border: none;
-            border-radius: 50%;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all var(--transition);
-            -webkit-tap-highlight-color: transparent;
-            color: #fff;
-        }
-        .game-team-card .gt-actions button:active { transform: scale(0.85); }
-
-        /* ===== AI Chat ===== */
-        .chat-history {
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 4px 0;
-            -webkit-overflow-scrolling: touch;
-        }
-        .chat-history::-webkit-scrollbar { width: 3px; }
-        .chat-history::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-        .chat-message {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-            align-items: flex-start;
-        }
-        .chat-message.user { flex-direction: row-reverse; }
-        .chat-message .avatar {
-            width: 28px; height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-        .chat-message .avatar.user-avatar {
-            background: var(--accent-gradient);
-            color: #fff;
-        }
-        .chat-message .avatar.ai-avatar {
-            background: rgba(99, 102, 241, 0.2);
-            color: #818cf8;
-        }
-        .chat-message .bubble {
-            padding: 8px 12px;
-            border-radius: var(--radius-md);
             font-size: 13px;
-            line-height: 1.6;
-            max-width: 80%;
-            word-break: break-word;
+            font-weight: 700;
+            transition: var(--transition);
         }
-        .chat-message.user .bubble {
-            background: var(--accent-gradient);
-            color: #fff;
-            border-bottom-right-radius: 4px;
-        }
-        .chat-message.ai .bubble {
-            background: rgba(255,255,255,0.06);
-            color: var(--foreground);
-            border-bottom-left-radius: 4px;
-        }
-        .chat-empty {
-            text-align: center;
-            padding: 24px;
-            color: var(--foreground-dim);
-            font-size: 13px;
-        }
-        .chat-empty svg {
-            width: 32px; height: 32px;
-            stroke: var(--foreground-dim);
-            stroke-width: 1.5;
-            fill: none;
-            margin-bottom: 8px;
-        }
+        .btn:active { transform: scale(.97); }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #fff; }
+        .btn-secondary { border: 1px solid var(--border); background: rgba(255,255,255,.08); color: var(--foreground); }
+        .btn-row { display: flex; gap: 8px; }
+        .btn-row .btn { flex: 1; }
 
-        /* ===== Jump Section ===== */
-        .jump-row {
-            display: flex;
-            gap: 8px;
-        }
-        .jump-row .input { text-align: center; font-size: 18px; font-weight: 700; }
-        .chapter-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 10px;
-        }
-        .chapter-chip {
-            padding: 5px 10px;
+        .section-title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 15px; font-weight: 700; }
+        .section-title svg { width: 19px; height: 19px; fill: none; stroke: var(--accent); stroke-width: 2; }
+        .presets { display: flex; flex-wrap: wrap; gap: 7px; }
+        .preset {
+            padding: 7px 11px;
             border: 1px solid var(--border);
-            border-radius: 20px;
-            background: rgba(255,255,255,0.03);
-            color: var(--foreground-muted);
-            font-size: 11px;
-            font-weight: 500;
+            border-radius: 999px;
+            background: rgba(255,255,255,.04);
+            color: var(--muted);
             cursor: pointer;
-            transition: all var(--transition);
-            -webkit-tap-highlight-color: transparent;
-        }
-        .chapter-chip:active {
-            background: var(--accent);
-            color: #fff;
-            border-color: var(--accent);
-        }
-
-        /* ===== QR Code Section ===== */
-        .qr-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            margin-top: 12px;
-        }
-        .qr-section .qr-container {
-            background: #fff;
-            border-radius: var(--radius-sm);
-            padding: 6px;
-            flex-shrink: 0;
-        }
-        .qr-section #qrcode { width: 48px; height: 48px; display: block; }
-        .qr-section .qr-info { flex: 1; min-width: 0; }
-        .qr-section .qr-label { font-size: 11px; color: var(--foreground-muted); font-weight: 500; }
-        .qr-section .qr-hint { font-size: 10px; color: var(--foreground-dim); margin-top: 2px; }
-
-        /* ===== Toast ===== */
-        .toast {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            background: rgba(0, 0, 0, 0.88);
-            backdrop-filter: blur(12px);
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: var(--radius-md);
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 9999;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .toast.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        /* ===== Demo Link ===== */
-        .demo-link {
-            text-align: center;
-            padding: 10px;
             font-size: 11px;
-            color: var(--foreground-dim);
+        }
+        .preset:active { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+        .tab-bar {
+            display: flex;
+            flex-shrink: 0;
+            padding-bottom: var(--safe-bottom);
             border-top: 1px solid var(--border);
-            flex-shrink: 0;
             background: var(--bg-base);
         }
-        .demo-link a { color: var(--foreground-muted); text-decoration: none; }
-        .demo-link a:hover { color: var(--foreground); }
-
-        /* ===== Scrollbar ===== */
-        .tab-pane::-webkit-scrollbar { width: 3px; }
-        .tab-pane::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-        /* ===== Responsive ===== */
-        @media (min-width: 480px) {
-            .tab-pane { padding: 20px 24px 24px; }
-            .page-hero .page-number { font-size: 72px; }
-            .game-team-grid { grid-template-columns: 1fr 1fr 1fr; }
+        .tab-item {
+            position: relative;
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            min-height: 55px;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 600;
         }
+        .tab-item::before {
+            position: absolute;
+            top: 0;
+            left: 34%;
+            right: 34%;
+            height: 2px;
+            border-radius: 0 0 2px 2px;
+            background: var(--accent);
+            content: "";
+            opacity: 0;
+        }
+        .tab-item.active { color: var(--accent); }
+        .tab-item.active::before { opacity: 1; }
+        .tab-item svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9; }
+
+        .footer-link {
+            flex-shrink: 0;
+            padding: 7px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-base);
+            text-align: center;
+        }
+        .footer-link a { color: var(--muted); font-size: 10px; text-decoration: none; }
+
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            z-index: 100;
+            max-width: calc(100% - 40px);
+            padding: 12px 21px;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 12px;
+            background: rgba(0,0,0,.88);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            opacity: 0;
+            pointer-events: none;
+            text-align: center;
+            transform: translate(-50%, -50%) scale(.92);
+            transition: 220ms ease;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
         @media (min-width: 768px) {
-            body { max-width: 480px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-            .game-team-grid { grid-template-columns: 1fr 1fr; }
+            body { max-width: 520px; margin: 0 auto; border-right: 1px solid var(--border); border-left: 1px solid var(--border); }
         }
-
-        /* No maximum-scale zoom disable - keep accessibility */
     </style>
 </head>
 <body>
-
-    <!-- ===== Header ===== -->
     <header class="app-header">
         <div class="brand">
             <div class="brand-icon">G</div>
-            <div class="brand-text">
+            <div>
                 <div class="brand-name">GSP 控制台</div>
-                <div class="brand-sub">AI 主持演示系统</div>
+                <div class="brand-sub">在线演示控制系统</div>
             </div>
         </div>
         <div class="header-status">
-            <div class="status-badge" id="statusBadge">
-                <span class="dot" id="statusDot"></span>
+            <div class="status-badge">
+                <span class="status-dot" id="statusDot"></span>
                 <span id="statusText">未连接</span>
             </div>
-            <div class="page-chip">
-                <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
-                <span>第 <strong id="currentSlideDisplay">1</strong> 页</span>
-            </div>
+            <div class="page-chip">第 <strong id="currentSlideDisplay">1</strong> 页</div>
         </div>
     </header>
 
-    <!-- ===== Tab Content ===== -->
-    <div class="tab-content-wrapper">
-
-        <!-- Tab 1: Remote -->
-        <div class="tab-pane active" id="pane-remote">
-            <div class="page-hero">
-                <div class="page-label">当前页面</div>
-                <div class="page-number" id="currentPage">1</div>
-                <div class="page-total">共 <span id="totalPages">0</span> 页</div>
-            </div>
-
-            <div class="nav-grid">
-                <button class="nav-btn primary-action" onclick="app.first()">
-                    <svg viewBox="0 0 24 24"><polyline points="23 18 17 12 23 6"/><polyline points="17 18 11 12 17 6"/><line x1="1" y1="6" x2="1" y2="18"/></svg>
-                    <span class="nav-label">首页</span>
+    <main class="content">
+        <section class="pane active" id="pane-remote">
+            <div class="slide-carousel" aria-label="当前幻灯片及前后页面">
+                <button class="thumb-card side is-empty" id="carouselPrev" type="button" onclick="app.prev()" aria-label="上一张幻灯片">
+                    <img id="carouselPrevImage" alt="">
+                    <span class="thumb-caption" id="carouselPrevCaption"></span>
                 </button>
-                <button class="nav-btn primary-action" onclick="app.last()">
-                    <svg viewBox="0 0 24 24"><polyline points="1 6 7 12 1 18"/><polyline points="7 6 13 12 7 18"/><line x1="23" y1="6" x2="23" y2="18"/></svg>
-                    <span class="nav-label">末页</span>
-                </button>
-            </div>
-
-            <div class="nav-btn-row">
-                <button class="nav-btn" onclick="app.prev()">
-                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                    <span class="nav-label">上一页</span>
-                </button>
-                <button class="nav-btn" onclick="app.next()" style="border-color:var(--accent);background:var(--bg-active);">
-                    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-                    <span class="nav-label" style="color:var(--accent);">下一页</span>
-                </button>
-            </div>
-
-            <div class="nav-btn-row">
-                <button class="nav-btn" onclick="app.toggleFullscreen()">
-                    <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-                    <span class="nav-label">全屏</span>
-                </button>
-                <button class="nav-btn" onclick="app.replayVideo()">
-                    <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    <span class="nav-label">重播</span>
-                </button>
-                <button class="nav-btn" id="displayModeBtn" onclick="app.toggleDisplayMode()">
-                    <svg viewBox="0 0 24 24" id="displayModeIcon"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                    <span class="nav-label" id="displayModeLabel">撑满</span>
-                </button>
-            </div>
-
-            <div class="card" style="margin-top:4px;">
-                <div class="card-label">快速跳转</div>
-                <div class="input-group">
-                    <input type="number" class="input" id="jumpInput" placeholder="页码" min="1" style="font-weight:700;">
-                    <button class="btn btn-primary" onclick="app.jumpTo()" style="padding:10px 20px;">跳转</button>
-                </div>
-                <div class="chapter-chips" id="chapterChips"></div>
-            </div>
-
-            <div class="qr-section">
-                <div class="qr-container"><canvas id="qrcode"></canvas></div>
-                <div class="qr-info">
-                    <div class="qr-label">手机扫码打开控制台</div>
-                    <div class="qr-hint">同局域网下远程控制翻页</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab 2: Scores -->
-        <div class="tab-pane" id="pane-scores">
-            <div class="section-header">
-                <svg viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><line x1="12" y1="2" x2="12" y2="13"/><polyline points="9 9 12 13 15 9"/></svg>
-                <h2>各组实时积分</h2>
-                <span class="badge" id="scoreCount">0 队</span>
-            </div>
-
-            <div id="scoreList">
-                <div class="card" style="text-align:center;padding:24px;color:var(--foreground-dim);font-size:13px;">加载中...</div>
-            </div>
-
-            <div class="btn-row" style="margin-bottom:16px;">
-                <button class="btn btn-secondary btn-sm" onclick="app.requestLeaderboard()">
-                    <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><line x1="12" y1="2" x2="12" y2="13"/><polyline points="9 9 12 13 15 9"/></svg>
-                    广播排行榜
-                </button>
-                <button class="btn btn-danger btn-sm" onclick="app.resetAllScores()">
-                    <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                    重置积分
-                </button>
-            </div>
-
-            <div class="section-header" style="margin-top:4px;">
-                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                <h2>排行榜</h2>
-            </div>
-            <div class="card" id="leaderboardList" style="padding:8px;">
-                <div style="text-align:center;padding:16px;color:var(--foreground-dim);font-size:13px;">暂无数据</div>
-            </div>
-        </div>
-
-        <!-- Tab 3: TTS -->
-        <div class="tab-pane" id="pane-tts">
-            <div class="section-header">
-                <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-                <h2>AI 语音播报</h2>
-            </div>
-
-            <div class="card">
-                <div class="card-label">快速播报</div>
-                <div class="tts-presets">
-                    <button class="tts-preset-btn" onclick="app.setTtsText('大家好，欢迎参加本次学习会')">👋 欢迎语</button>
-                    <button class="tts-preset-btn" onclick="app.setTtsText('请各小组做好准备')">🎯 小组准备</button>
-                    <button class="tts-preset-btn" onclick="app.setTtsText('请鼓掌欢迎')">👏 鼓掌</button>
-                    <button class="tts-preset-btn" onclick="app.setTtsText('时间到，请停止讨论')">⏰ 时间到</button>
-                    <button class="tts-preset-btn" onclick="app.setTtsText('感谢大家的积极参与')">🙏 感谢参与</button>
-                    <button class="tts-preset-btn" onclick="app.setTtsText('本次学习会到此结束')">🎬 结束语</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-label">自定义内容</div>
-                <textarea class="textarea" id="ttsText" placeholder="输入要播报的文字内容...">大家好，欢迎参加本次学习会</textarea>
-            </div>
-
-            <div class="btn-row">
-                <button class="btn btn-primary btn-lg" onclick="app.speakTts()" style="flex:2;">
-                    <svg viewBox="0 0 24 24" width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-                    立即播报
-                </button>
-                <button class="btn btn-secondary btn-lg" onclick="app.stopTts()" style="flex:1;">
-                    <svg viewBox="0 0 24 24" width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                    停止
-                </button>
-            </div>
-        </div>
-
-        <!-- Tab 4: Game -->
-        <div class="tab-pane" id="pane-game">
-            <div class="section-header">
-                <svg viewBox="0 0 24 24"><line x1="6" y1="11" x2="10" y2="11"/><line x1="8" y1="9" x2="8" y2="13"/><line x1="15" y1="12" x2="15.01" y2="12"/><line x1="18" y1="10" x2="18.01" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg>
-                <h2>游戏环节控制</h2>
-            </div>
-
-            <div class="game-status-card">
-                <div class="status-icon" id="gameStatusIcon">⏹</div>
-                <div class="status-text" id="gameStatusText">游戏未开始</div>
-                <div class="round-name" id="gameRoundName"></div>
-            </div>
-
-            <div class="card">
-                <div class="card-label">环节名称</div>
-                <input class="input" id="roundNameInput" placeholder="如：知识问答" value="知识问答">
-            </div>
-
-            <div class="btn-row" style="margin-bottom:16px;">
-                <button class="btn btn-primary" onclick="app.startGame()">
-                    <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    开始
-                </button>
-                <button class="btn btn-warning" onclick="app.endGame()">
-                    <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                    结束
-                </button>
-                <button class="btn btn-danger" onclick="app.resetGame()">
-                    <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                    重置
-                </button>
-            </div>
-
-            <div class="section-header">
-                <svg viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><line x1="12" y1="2" x2="12" y2="13"/><polyline points="9 9 12 13 15 9"/></svg>
-                <h2>抢答加分</h2>
-                <span class="badge">自动 TTS</span>
-            </div>
-            <div class="game-team-grid" id="gameTeamGrid"></div>
-        </div>
-
-        <!-- Tab 5: AI -->
-        <div class="tab-pane" id="pane-ai">
-            <div class="section-header">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                <h2>AI 对话</h2>
-            </div>
-
-            <div class="card">
-                <div class="chat-history" id="aiChatHistory">
-                    <div class="chat-empty" id="aiChatEmpty">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                        <div>开始与 AI 对话吧！</div>
+                <div class="thumb-card current" id="carouselCurrent">
+                    <img id="carouselCurrentImage" alt="当前幻灯片缩略图">
+                    <div class="thumb-current-info">
+                        <div class="thumb-current-title" id="carouselCurrentTitle">正在加载…</div>
+                        <div class="thumb-current-meta" id="carouselCurrentMeta"></div>
                     </div>
                 </div>
+                <button class="thumb-card side is-empty" id="carouselNext" type="button" onclick="app.next()" aria-label="下一张幻灯片">
+                    <img id="carouselNextImage" alt="">
+                    <span class="thumb-caption" id="carouselNextCaption"></span>
+                </button>
+            </div>
+
+            <div class="primary-nav" aria-label="主要翻页控制">
+                <button id="prevBtn" onclick="app.prev()">
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    <span>上一页</span>
+                </button>
+                <button id="nextBtn" onclick="app.next()">
+                    <span>下一页</span>
+                    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+
+            <div class="utility-nav" aria-label="辅助演示控制">
+                <button class="utility-btn" id="firstBtn" onclick="app.first()">
+                    <svg viewBox="0 0 24 24"><polyline points="19 18 13 12 19 6"/><line x1="6" y1="5" x2="6" y2="19"/></svg>
+                    <span>首页</span>
+                </button>
+                <button class="utility-btn" onclick="app.toggleFullscreen()">
+                    <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                    <span>全屏</span>
+                </button>
+                <button class="utility-btn" onclick="app.replayVideo()">
+                    <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.34-5.66L4 8.68"/><polyline points="4 3 4 9 10 9"/><polygon points="10 8 17 12 10 16 10 8"/></svg>
+                    <span>重播</span>
+                </button>
+                <button class="utility-btn" id="displayModeBtn" onclick="app.toggleDisplayMode()">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    <span id="displayModeLabel">撑满</span>
+                </button>
+                <button class="utility-btn" id="lastBtn" onclick="app.last()">
+                    <svg viewBox="0 0 24 24"><polyline points="5 6 11 12 5 18"/><line x1="18" y1="5" x2="18" y2="19"/></svg>
+                    <span>末页</span>
+                </button>
             </div>
 
             <div class="card">
-                <div class="card-label">输入问题</div>
-                <div class="input-group">
-                    <input class="input" id="aiQuestionInput" placeholder="输入你想问的问题..." onkeydown="if(event.key==='Enter')app.askAI()">
-                    <button class="btn btn-primary" onclick="app.askAI()" style="padding:10px 16px;">
-                        <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    </button>
+                <div class="card-header">
+                    <div class="card-title">章节跳转</div>
+                </div>
+                <div class="chapter-list" id="chapterList">
+                    <div class="empty-chapters">正在加载章节…</div>
                 </div>
             </div>
+        </section>
 
-            <div class="btn-row">
-                <button class="btn btn-secondary" id="aiVoiceBtn" onclick="app.toggleVoiceInput()" style="flex:1;">
-                    <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                    语音输入
-                </button>
-                <button class="btn btn-secondary" onclick="app.clearAIChat()" style="flex:0;">
-                    <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
+        <section class="pane" id="pane-tts">
+            <div class="section-title">
+                <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                <span>语音播报</span>
             </div>
-        </div>
-    </div>
+            <div class="card">
+                <div class="card-header"><div class="card-title">快捷内容</div></div>
+                <div class="presets">
+                    <button class="preset" onclick="app.setTtsText('大家好，欢迎参加本次学习会')">👋 欢迎语</button>
+                    <button class="preset" onclick="app.setTtsText('请各小组做好准备')">🎯 小组准备</button>
+                    <button class="preset" onclick="app.setTtsText('请鼓掌欢迎')">👏 鼓掌</button>
+                    <button class="preset" onclick="app.setTtsText('时间到，请停止讨论')">⏰ 时间到</button>
+                    <button class="preset" onclick="app.setTtsText('感谢大家的积极参与')">🙏 感谢参与</button>
+                    <button class="preset" onclick="app.setTtsText('本次学习会到此结束')">🎬 结束语</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><div class="card-title">自定义播报</div></div>
+                <textarea class="textarea" id="ttsText" placeholder="输入要播报的文字内容…">大家好，欢迎参加本次学习会</textarea>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="app.speakTts()">立即播报</button>
+                <button class="btn btn-secondary" onclick="app.stopTts()">停止播报</button>
+            </div>
+        </section>
+    </main>
 
-    <!-- ===== Bottom Tab Bar ===== -->
-    <nav class="tab-bar">
+    <nav class="tab-bar" aria-label="控制台功能">
         <button class="tab-item active" data-tab="remote">
             <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             <span>遥控</span>
         </button>
-        <button class="tab-item" data-tab="scores">
-            <svg viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><line x1="12" y1="2" x2="12" y2="13"/><polyline points="9 9 12 13 15 9"/></svg>
-            <span>积分</span>
-        </button>
         <button class="tab-item" data-tab="tts">
-            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
             <span>播报</span>
         </button>
-        <button class="tab-item" data-tab="game">
-            <svg viewBox="0 0 24 24"><line x1="6" y1="11" x2="10" y2="11"/><line x1="8" y1="9" x2="8" y2="13"/><line x1="15" y1="12" x2="15.01" y2="12"/><line x1="18" y1="10" x2="18.01" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg>
-            <span>游戏</span>
-        </button>
-        <button class="tab-item" data-tab="ai">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            <span>AI</span>
-        </button>
     </nav>
-
-    <div class="demo-link">
-        <a href="/slides.html" target="_blank">🎬 打开演示页面</a>
-    </div>
-
-    <!-- ===== Toast ===== -->
+    <div class="footer-link"><a href="/slides.html" target="_blank">打开演示页面 ↗</a></div>
     <div class="toast" id="toast"></div>
 
-    <!-- ===== Scripts ===== -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="/static/js/ws-client.js"></script>
     <script src="/static/js/slide-store.js"></script>
     <script>
         (function() {
             const app = {
                 store: new SlideStore(),
-                teamsCache: [],
-                gameTeams: ['A队', 'B队', 'C队', 'D队'],
-                teamColors: { 'A队': '#22c55e', 'B队': '#3b82f6', 'C队': '#f59e0b', 'D队': '#ef4444' },
+                displayMode: 'fill',
 
                 init: function() {
                     const self = this;
-
-                    // ---- WS Event Bindings ----
-                    this.store.onCurrentSlideChange = function(slideId, position, total) {
-                        document.getElementById('currentPage').textContent = position;
-                        document.getElementById('currentSlideDisplay').textContent = position;
-                        document.getElementById('totalPages').textContent = total;
-                        const jumpInput = document.getElementById('jumpInput');
-                        if (jumpInput) jumpInput.max = total;
+                    this.store.onSlidesChange = function() {
+                        self.renderChapters();
+                        self.renderCarousel();
                     };
-
+                    this.store.onCurrentSlideChange = function(slideId, position, total) {
+                        self.renderPosition(position, total);
+                        self.renderCarousel();
+                        self.updateActiveChapter();
+                    };
                     this.store.onConnectionStatusChange = function(status) {
                         const dot = document.getElementById('statusDot');
-                        const text = document.getElementById('statusText');
-                        dot.className = 'dot';
-                        if (status === 'connected') {
-                            dot.classList.add('connected');
-                            text.textContent = '已连接';
-                        } else if (status === 'connecting') {
-                            dot.classList.add('connecting');
-                            text.textContent = '连接中';
-                        } else {
-                            text.textContent = '未连接';
-                        }
+                        dot.className = 'status-dot' + (status === 'connected' ? ' connected' : status === 'connecting' ? ' connecting' : '');
+                        document.getElementById('statusText').textContent =
+                            status === 'connected' ? '已连接' : status === 'connecting' ? '连接中' : '未连接';
                     };
-
-                    this.store.ws.on('clients_count', function(data) {
-                        // could show count in badge
-                    });
-
-                    this.store.ws.on('score_board', function(data) {
-                        self.teamsCache = data.teams || [];
-                        self.renderScoreBoard(self.teamsCache);
-                        self.renderLeaderboard(self.teamsCache);
-                        self.renderGameTeamGrid(self.teamsCache);
-                        document.getElementById('scoreCount').textContent = self.teamsCache.length + ' 队';
-                    });
-
-                    this.store.ws.on('score_update', function(data) {
-                        self.updateSingleScore(data.team_name, data.score);
-                    });
-
-                    this.store.ws.on('score_set', function(data) {
-                        self.updateSingleScore(data.team_name, data.score);
-                    });
-
-                    this.store.ws.on('score_reset', function(data) {
-                        self.teamsCache = data.teams || [];
-                        self.renderScoreBoard(self.teamsCache);
-                        self.renderLeaderboard(self.teamsCache);
-                        self.renderGameTeamGrid(self.teamsCache);
-                    });
-
-                    this.store.ws.on('game_control', function(data) {
-                        self.handleGameControl(data);
-                    });
-
-                    this.store.ws.on('ai_realtime_status', function(data) {
-                        self.handleRealtimeStatus(data);
-                    });
-                    this.store.ws.on('ai_realtime_text_delta', function(data) {
-                        self.appendRealtimeText(data.delta);
-                    });
-                    this.store.ws.on('ai_realtime_text_done', function(data) {
-                        self.finishRealtimeText(data.text);
-                    });
-
-                    // ---- Init ----
-                    this.store.init().then(function() {
-                        self.updateChapterChips();
-                        self.requestScores();
-                    });
-
                     this.bindTabs();
                     this.bindKeyboard();
-                    this.generateQR();
+                    this.store.init();
                 },
 
-                // ===== Navigation =====
+                renderPosition: function(position, total) {
+                    const safePosition = position > 0 ? position : 1;
+                    document.getElementById('currentSlideDisplay').textContent = safePosition;
+                    document.getElementById('prevBtn').disabled = total === 0 || safePosition <= 1;
+                    document.getElementById('firstBtn').disabled = total === 0 || safePosition <= 1;
+                    document.getElementById('nextBtn').disabled = total === 0 || safePosition >= total;
+                    document.getElementById('lastBtn').disabled = total === 0 || safePosition >= total;
+                },
+
+                setCarouselSide: function(side, slide, position) {
+                    const card = document.getElementById('carousel' + side);
+                    const image = document.getElementById('carousel' + side + 'Image');
+                    const caption = document.getElementById('carousel' + side + 'Caption');
+                    if (!slide) {
+                        delete image.dataset.slideId;
+                        image.onload = null;
+                        image.onerror = null;
+                        image.alt = '';
+                        image.style.visibility = 'hidden';
+                        image.removeAttribute('src');
+                        card.disabled = true;
+                        card.setAttribute('aria-hidden', 'true');
+                        card.classList.add('is-empty');
+                        caption.textContent = '';
+                        return;
+                    }
+                    const slideId = String(slide.slide_id);
+                    card.classList.remove('is-empty');
+                    card.disabled = false;
+                    card.removeAttribute('aria-hidden');
+                    image.dataset.slideId = slideId;
+                    image.style.visibility = 'hidden';
+                    image.alt = slide.title || ('第 ' + position + ' 页');
+                    image.onload = function() {
+                        if (image.dataset.slideId === slideId) image.style.visibility = 'visible';
+                    };
+                    image.onerror = function() {
+                        if (image.dataset.slideId === slideId) image.style.visibility = 'hidden';
+                    };
+                    image.src = '/api/slides/' + encodeURIComponent(slideId) + '/thumbnail';
+                    caption.textContent = '第 ' + position + ' 页';
+                    card.setAttribute(
+                        'aria-label',
+                        (side === 'Prev' ? '上一张：' : '下一张：') +
+                        (slide.title || ('第 ' + position + ' 页'))
+                    );
+                },
+
+                renderCarousel: function() {
+                    const slide = this.store.getCurrentSlide();
+                    if (!slide) {
+                        document.getElementById('carouselCurrentTitle').textContent =
+                            this.store.total ? '正在同步演示状态…' : '暂无幻灯片';
+                        document.getElementById('carouselCurrentMeta').textContent = '';
+                        this.setCarouselSide('Prev', null, 0);
+                        this.setCarouselSide('Next', null, 0);
+                        return;
+                    }
+                    const index = this.store.slideOrder.indexOf(slide.slide_id);
+                    const position = index + 1;
+                    const previous = index > 0 ? this.store.getSlideByPosition(position - 1) : null;
+                    const next = index >= 0 && index < this.store.total - 1
+                        ? this.store.getSlideByPosition(position + 1)
+                        : null;
+                    const image = document.getElementById('carouselCurrentImage');
+                    const chapter = slide.chapter || '未分章节';
+                    const slideId = String(slide.slide_id);
+                    image.dataset.slideId = slideId;
+                    image.style.visibility = 'hidden';
+                    image.alt = slide.title || '当前幻灯片';
+                    image.onload = function() {
+                        if (image.dataset.slideId === slideId) image.style.visibility = 'visible';
+                    };
+                    image.onerror = function() {
+                        if (image.dataset.slideId === slideId) image.style.visibility = 'hidden';
+                    };
+                    image.src = '/api/slides/' + encodeURIComponent(slideId) + '/thumbnail';
+                    document.getElementById('carouselCurrentTitle').textContent =
+                        slide.title || '未命名幻灯片';
+                    document.getElementById('carouselCurrentMeta').textContent =
+                        chapter + ' · 第 ' + position + ' / ' + this.store.total + ' 页';
+                    this.setCarouselSide('Prev', previous, position - 1);
+                    this.setCarouselSide('Next', next, position + 1);
+                },
+
+                getChapters: function() {
+                    const chapters = [];
+                    const indexByName = Object.create(null);
+                    const slideMap = Object.create(null);
+                    this.store.slides.forEach(function(slide) { slideMap[slide.slide_id] = slide; });
+                    this.store.slideOrder.forEach(function(slideId, position) {
+                        const slide = slideMap[slideId];
+                        if (!slide) return;
+                        const name = slide.chapter || '未分章节';
+                        let chapter = indexByName[name];
+                        if (!chapter) {
+                            chapter = {
+                                name: name,
+                                firstSlideId: slide.slide_id
+                            };
+                            indexByName[name] = chapter;
+                            chapters.push(chapter);
+                        }
+                    });
+                    return chapters;
+                },
+
+                renderChapters: function() {
+                    const container = document.getElementById('chapterList');
+                    const chapters = this.getChapters();
+                    container.innerHTML = '';
+                    if (!chapters.length) {
+                        container.innerHTML = '<div class="empty-chapters">暂无章节</div>';
+                        return;
+                    }
+                    const self = this;
+                    chapters.forEach(function(chapter) {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'chapter-btn';
+                        button.dataset.chapter = chapter.name;
+                        button.dataset.slideId = chapter.firstSlideId;
+                        const name = document.createElement('span');
+                        name.className = 'chapter-name';
+                        name.textContent = chapter.name;
+                        button.appendChild(name);
+                        button.addEventListener('click', function() {
+                            self.jumpToSlide(chapter.firstSlideId);
+                        });
+                        container.appendChild(button);
+                    });
+                    this.updateActiveChapter();
+                },
+
+                updateActiveChapter: function() {
+                    const slide = this.store.getCurrentSlide();
+                    const activeChapter = slide ? (slide.chapter || '未分章节') : '';
+                    document.querySelectorAll('.chapter-btn').forEach(function(button) {
+                        button.classList.toggle('active', button.dataset.chapter === activeChapter);
+                    });
+                },
+
                 next: function() { this.store.next(); },
                 prev: function() { this.store.prev(); },
                 first: function() { this.store.first(); },
                 last: function() { this.store.last(); },
-                jumpTo: function(page) {
-                    if (page === undefined) page = document.getElementById('jumpInput').value;
-                    if (page) {
-                        this.store.gotoPosition(parseInt(page));
-                        document.getElementById('jumpInput').value = '';
-                    }
-                },
+                jumpToSlide: function(slideId) { if (slideId) this.store.goto(slideId); },
                 toggleFullscreen: function() { this.store.toggleFullscreen(); },
                 replayVideo: function() { this.store.replayVideo(); },
                 toggleDisplayMode: function() {
-                    var current = this._displayMode || 'fill';
-                    var next = current === 'fill' ? '16-9' : 'fill';
-                    this._displayMode = next;
-                    this.store.send({ type: 'display_mode', mode: next });
-                    // 更新按钮状态
-                    var btn = document.getElementById('displayModeBtn');
-                    var label = document.getElementById('displayModeLabel');
-                    var icon = document.getElementById('displayModeIcon');
-                    if (next === '16-9') {
-                        label.textContent = '16:9';
-                        btn.style.borderColor = 'var(--accent)';
-                        btn.style.background = 'var(--bg-active)';
-                        label.style.color = 'var(--accent)';
-                        this.showToast('📐 已切换 16:9 模式');
-                    } else {
-                        label.textContent = '撑满';
-                        btn.style.borderColor = '';
-                        btn.style.background = '';
-                        label.style.color = '';
-                        this.showToast('🖥️ 已切换撑满模式');
-                    }
+                    this.displayMode = this.displayMode === 'fill' ? '16-9' : 'fill';
+                    this.store.send({ type: 'display_mode', mode: this.displayMode });
+                    const active = this.displayMode === '16-9';
+                    document.getElementById('displayModeBtn').classList.toggle('active', active);
+                    document.getElementById('displayModeLabel').textContent = active ? '16:9' : '撑满';
+                    this.showToast(active ? '已切换为 16:9' : '已切换为撑满模式');
                 },
 
-                updateChapterChips: function() {
-                    const container = document.getElementById('chapterChips');
-                    if (!container) return;
-                    const slides = this.store.slides;
-                    const seen = new Set();
-                    const chips = [];
-                    slides.forEach(function(s, idx) {
-                        if (s.chapter && !seen.has(s.chapter)) {
-                            seen.add(s.chapter);
-                            chips.push('<button class="chapter-chip" onclick="app.jumpTo(' + (idx + 1) + ')">' + escapeHtml(s.chapter) + '</button>');
-                        }
-                    });
-                    container.innerHTML = chips.join('');
-                },
-
-                // ===== Scores =====
-                requestScores: function() { this.store.send({ type: 'score_get' }); },
-                requestLeaderboard: function() { this.store.send({ type: 'score_leaderboard' }); },
-                updateScore: function(teamName, delta, autoTts) {
-                    this.store.send({ type: 'score_update', team_name: teamName, delta: delta, auto_tts: autoTts || false });
-                },
-                updateSingleScore: function(teamName, score) {
-                    var idx = this.teamsCache.findIndex(function(t) { return t.team_name === teamName; });
-                    if (idx >= 0) this.teamsCache[idx].score = score;
-                    this.renderScoreBoard(this.teamsCache);
-                    this.renderLeaderboard(this.teamsCache);
-                    this.renderGameTeamGrid(this.teamsCache);
-                },
-                customScore: function(teamName) {
-                    var input = prompt('输入 ' + teamName + ' 的加减分数', '0');
-                    if (input !== null) {
-                        var delta = parseInt(input);
-                        if (!isNaN(delta)) this.updateScore(teamName, delta, false);
-                    }
-                },
-                resetAllScores: function() {
-                    if (confirm('确认重置所有队伍积分？')) {
-                        this.store.send({ type: 'score_reset' });
-                        this.showToast('积分已重置');
-                    }
-                },
-                renderScoreBoard: function(teams) {
-                    this.teamsCache = teams || [];
-                    var container = document.getElementById('scoreList');
-                    if (!teams || teams.length === 0) {
-                        container.innerHTML = '<div class="card" style="text-align:center;padding:24px;color:var(--foreground-dim);font-size:13px;">暂无队伍数据</div>';
-                        return;
-                    }
-                    var colors = this.teamColors;
-                    var self = this;
-                    container.innerHTML = teams.map(function(t) {
-                        var color = colors[t.team_name] || '#22c55e';
-                        return '<div class="score-team">' +
-                            '<div class="team-color" style="background:' + color + ';"></div>' +
-                            '<div class="team-info"><div class="team-name">' + escapeHtml(t.team_name) + '</div></div>' +
-                            '<div class="team-score" id="score-' + t.team_name + '">' + t.score + '</div>' +
-                            '<div class="score-actions">' +
-                            '<button class="btn-add" onclick="app.updateScore(\'' + t.team_name + '\', 10, true)" title="加10分">+10</button>' +
-                            '<button class="btn-add" onclick="app.updateScore(\'' + t.team_name + '\', 5, false)" title="加5分">+5</button>' +
-                            '<button class="btn-sub" onclick="app.updateScore(\'' + t.team_name + '\', -5, false)" title="减5分">-5</button>' +
-                            '<button class="btn-sub" onclick="app.updateScore(\'' + t.team_name + '\', -10, false)" title="减10分">-10</button>' +
-                            '<button class="btn-more" onclick="app.customScore(\'' + t.team_name + '\')" title="自定义">✏️</button>' +
-                            '</div></div>';
-                    }).join('');
-                },
-                renderLeaderboard: function(teams) {
-                    var container = document.getElementById('leaderboardList');
-                    if (!teams || teams.length === 0) {
-                        container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--foreground-dim);font-size:13px;">暂无数据</div>';
-                        return;
-                    }
-                    var sorted = teams.slice().sort(function(a, b) { return b.score - a.score; });
-                    container.innerHTML = sorted.map(function(t, i) {
-                        var rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
-                        return '<div class="leaderboard-item"><div class="rank ' + rankClass + '">' + (i + 1) + '</div><div class="lb-name">' + escapeHtml(t.team_name) + '</div><div class="lb-score">' + t.score + '</div></div>';
-                    }).join('');
-                },
-                renderGameTeamGrid: function(teams) {
-                    var grid = document.getElementById('gameTeamGrid');
-                    if (!grid) return;
-                    var scoreMap = {};
-                    (teams || []).forEach(function(t) { scoreMap[t.team_name] = t.score; });
-                    var colors = this.teamColors;
-                    var self = this;
-                    grid.innerHTML = this.gameTeams.map(function(tname) {
-                        var score = scoreMap[tname] || 0;
-                        var color = colors[tname] || '#22c55e';
-                        return '<div class="game-team-card" style="border-color:' + color + '40;">' +
-                            '<div class="gt-name" style="color:' + color + ';">' + escapeHtml(tname) + '</div>' +
-                            '<div class="gt-score" id="gameScore-' + tname + '">' + score + '</div>' +
-                            '<div class="gt-actions">' +
-                            '<button style="background:' + color + ';" onclick="app.gameScore(\'' + tname + '\', 1)" title="+1">+1</button>' +
-                            '<button style="background:' + color + ';" onclick="app.gameScore(\'' + tname + '\', 2)" title="+2">+2</button>' +
-                            '<button style="background:' + color + ';" onclick="app.gameScore(\'' + tname + '\', 5)" title="+5">+5</button>' +
-                            '<button style="background:' + color + ';" onclick="app.gameScore(\'' + tname + '\', 10)" title="+10">+10</button>' +
-                            '<button class="btn-sub" style="width:36px;height:36px;border-radius:50%;font-size:16px;font-weight:700;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;" onclick="app.gameScore(\'' + tname + '\', -1)" title="-1">-1</button>' +
-                            '<button class="btn-sub" style="width:36px;height:36px;border-radius:50%;font-size:16px;font-weight:700;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;" onclick="app.gameScore(\'' + tname + '\', -5)" title="-5">-5</button>' +
-                            '</div></div>';
-                    }).join('');
-                },
-                gameScore: function(teamName, delta) {
-                    this.store.send({ type: 'score_update', team_name: teamName, delta: delta, auto_tts: true });
-                    this.showToast('⚡ ' + teamName + ' ' + (delta > 0 ? '+' : '') + delta);
-                },
-
-                // ===== TTS =====
                 setTtsText: function(text) { document.getElementById('ttsText').value = text; },
                 speakTts: function() {
-                    var text = document.getElementById('ttsText').value.trim();
-                    if (!text) { this.showToast('请输入播报内容'); return; }
+                    const text = document.getElementById('ttsText').value.trim();
+                    if (!text) {
+                        this.showToast('请输入播报内容');
+                        return;
+                    }
                     this.store.send({ type: 'tts_speak', text: text, voice: '' });
-                    this.showToast('📢 播报请求已发送');
+                    this.showToast('播报请求已发送');
                 },
-                stopTts: function() { this.store.send({ type: 'tts_stop' }); this.showToast('⏹ 播报已停止'); },
-
-                // ===== Game =====
-                startGame: function() {
-                    var name = document.getElementById('roundNameInput').value.trim() || '知识问答';
-                    this.store.send({ type: 'game_control', action: 'start', round_name: name });
-                    this.showToast('▶ 环节已开始: ' + name);
-                },
-                endGame: function() { this.store.send({ type: 'game_control', action: 'end' }); this.showToast('⏸ 环节已结束'); },
-                resetGame: function() {
-                    if (confirm('确认重置游戏（将清除所有积分）？')) {
-                        this.store.send({ type: 'game_control', action: 'reset' });
-                        this.showToast('🔄 游戏已重置');
-                    }
-                },
-                handleGameControl: function(data) {
-                    var icon = document.getElementById('gameStatusIcon');
-                    var text = document.getElementById('gameStatusText');
-                    var name = document.getElementById('gameRoundName');
-                    if (data.action === 'started') {
-                        icon.textContent = '▶'; text.textContent = '游戏进行中'; name.textContent = data.round_name || '';
-                    } else if (data.action === 'ended') {
-                        icon.textContent = '⏹'; text.textContent = '游戏已结束'; name.textContent = '';
-                    } else if (data.action === 'reset') {
-                        icon.textContent = '⏹'; text.textContent = '游戏未开始'; name.textContent = '';
-                    }
+                stopTts: function() {
+                    this.store.send({ type: 'tts_stop' });
+                    this.showToast('播报已停止');
                 },
 
-                // ===== AI =====
-                askAI: function() {
-                    var input = document.getElementById('aiQuestionInput');
-                    var text = input.value.trim();
-                    if (!text) return;
-                    input.value = '';
-                    if (!this._aiRealtimeReady) {
-                        this._pendingAIQuestion = text;
-                        this.addAIChatMessage('ai', '正在连接实时 AI…', true);
-                        this.store.send({ type: 'ai_realtime_start', audio: false });
-                        return;
-                    }
-                    this.sendRealtimeText(text);
-                },
-                sendRealtimeText: function(text) {
-                    this.addAIChatMessage('user', text);
-                    this.addAIChatMessage('ai', '', true);
-                    this.store.send({ type: 'ai_realtime_text', text: text });
-                },
-                addAIChatMessage: function(role, text, isTemp) {
-                    var history = document.getElementById('aiChatHistory');
-                    var empty = document.getElementById('aiChatEmpty');
-                    if (empty) empty.style.display = 'none';
-                    if (isTemp) {
-                        var existing = history.querySelector('.chat-message.temp');
-                        if (existing) existing.remove();
-                    }
-                    var msg = document.createElement('div');
-                    msg.className = 'chat-message ' + (isTemp ? 'temp' : '') + ' ' + role;
-                    var avatarHtml = role === 'user'
-                        ? '<div class="avatar user-avatar">👤</div>'
-                        : '<div class="avatar ai-avatar">🤖</div>';
-                    msg.innerHTML = avatarHtml + '<div class="bubble">' + escapeHtml(text) + '</div>';
-                    history.appendChild(msg);
-                    history.scrollTop = history.scrollHeight;
-                },
-                clearAIChat: function() {
-                    document.getElementById('aiChatHistory').innerHTML = '<div class="chat-empty" id="aiChatEmpty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>开始与 AI 对话吧！</div></div>';
-                    this._aiRealtimeReady = false;
-                    this._pendingAIQuestion = null;
-                    this.store.send({ type: 'ai_realtime_clear', audio: false });
-                },
-                handleRealtimeStatus: function(data) {
-                    if (data.status === 'ready') {
-                        this._aiRealtimeReady = true;
-                        if (this._pendingAIQuestion) {
-                            var question = this._pendingAIQuestion;
-                            this._pendingAIQuestion = null;
-                            var placeholder = document.querySelector('#aiChatHistory .chat-message.temp');
-                            if (placeholder) placeholder.remove();
-                            this.sendRealtimeText(question);
-                        }
-                    } else if (data.status === 'error') {
-                        this._aiRealtimeReady = false;
-                        if (data.message) this.showToast(data.message);
-                    }
-                },
-                appendRealtimeText: function(delta) {
-                    if (!delta) return;
-                    var history = document.getElementById('aiChatHistory');
-                    var temp = history.querySelector('.chat-message.temp');
-                    if (!temp) {
-                        this.addAIChatMessage('ai', '', true);
-                        temp = history.querySelector('.chat-message.temp');
-                    }
-                    var bubble = temp.querySelector('.bubble');
-                    bubble.textContent += delta;
-                    history.scrollTop = history.scrollHeight;
-                },
-                finishRealtimeText: function(text) {
-                    var history = document.getElementById('aiChatHistory');
-                    var temp = history.querySelector('.chat-message.temp');
-                    if (!temp) {
-                        if (text) this.addAIChatMessage('ai', text);
-                        return;
-                    }
-                    var bubble = temp.querySelector('.bubble');
-                    if (text) bubble.textContent = text;
-                    temp.classList.remove('temp');
-                },
-                toggleVoiceInput: function() {
-                    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                        this.showToast('⚠ 您的浏览器不支持语音识别，请使用 Chrome'); return;
-                    }
-                    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                    var recognition = new SpeechRecognition();
-                    recognition.lang = 'zh-CN'; recognition.continuous = false; recognition.interimResults = false;
-                    var btn = document.getElementById('aiVoiceBtn');
-                    var self = this;
-                    btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg> 录音中...';
-                    btn.style.background = 'rgba(239,68,68,0.2)';
-                    btn.style.color = '#ef4444';
-                    recognition.onresult = function(event) {
-                        document.getElementById('aiQuestionInput').value = event.results[0][0].transcript;
-                        self.askAI();
-                        btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg> 语音输入';
-                        btn.style.background = '';
-                        btn.style.color = '';
-                    };
-                    recognition.onerror = function() {
-                        self.showToast('⚠ 语音识别失败，请重试');
-                        btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg> 语音输入';
-                        btn.style.background = '';
-                        btn.style.color = '';
-                    };
-                    recognition.onend = function() {
-                        btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg> 语音输入';
-                        btn.style.background = '';
-                        btn.style.color = '';
-                    };
-                    recognition.start();
-                },
-
-                // ===== Common =====
                 bindTabs: function() {
-                    var self = this;
                     document.querySelectorAll('.tab-item').forEach(function(item) {
                         item.addEventListener('click', function() {
-                            document.querySelectorAll('.tab-item').forEach(function(b) { b.classList.remove('active'); });
-                            document.querySelectorAll('.tab-pane').forEach(function(c) { c.classList.remove('active'); });
+                            document.querySelectorAll('.tab-item').forEach(function(tab) { tab.classList.remove('active'); });
+                            document.querySelectorAll('.pane').forEach(function(pane) { pane.classList.remove('active'); });
                             item.classList.add('active');
                             document.getElementById('pane-' + item.dataset.tab).classList.add('active');
-                            if (item.dataset.tab === 'scores') self.requestScores();
                         });
                     });
                 },
                 bindKeyboard: function() {
-                    document.addEventListener('keydown', function(e) {
-                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                        switch(e.key) {
-                            case 'ArrowRight': case ' ': e.preventDefault(); app.next(); break;
-                            case 'ArrowLeft': e.preventDefault(); app.prev(); break;
-                            case 'Home': e.preventDefault(); app.first(); break;
-                            case 'End': e.preventDefault(); app.last(); break;
+                    document.addEventListener('keydown', function(event) {
+                        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+                        if (event.key === 'ArrowRight' || event.key === ' ') {
+                            event.preventDefault();
+                            app.next();
+                        } else if (event.key === 'ArrowLeft') {
+                            event.preventDefault();
+                            app.prev();
+                        } else if (event.key === 'Home') {
+                            event.preventDefault();
+                            app.first();
+                        } else if (event.key === 'End') {
+                            event.preventDefault();
+                            app.last();
                         }
                     });
                 },
-                generateQR: function() {
-                    var url = window.location.href;
-                    var canvas = document.getElementById('qrcode');
-                    if (typeof QRCode !== 'undefined') {
-                        QRCode.toCanvas(canvas, url, { width: 48, margin: 1, color: { dark: '#003366', light: '#ffffff' } }, function(error) {
-                            if (error) console.error('QR failed:', error);
-                        });
-                    }
-                },
                 showToast: function(message) {
-                    var el = document.getElementById('toast');
-                    el.textContent = message;
-                    el.classList.add('show');
+                    const toast = document.getElementById('toast');
+                    toast.textContent = message;
+                    toast.classList.add('show');
                     clearTimeout(this.toastTimer);
-                    this.toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2000);
+                    this.toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2000);
                 }
             };
-
-            function escapeHtml(str) {
-                if (!str) return '';
-                return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            }
 
             window.app = app;
             app.init();

@@ -29,11 +29,17 @@ class SlideUpdate(BaseModel):
     chapter: Optional[str] = None
 
 
+class SlideVolumeUpdate(BaseModel):
+    """更新视频页播放音量；0 为静音，1 为原始音量，最大支持 20 倍增强。"""
+    volume_gain: float = Field(..., ge=0.0, le=20.0)
+
+
 class SlideCreate(BaseModel):
     """创建幻灯片请求"""
     type: str
     chapter: Optional[str] = None
     title: Optional[str] = None
+    source_url: Optional[str] = None
 
 
 class SlideRenderResponse(BaseModel):

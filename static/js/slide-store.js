@@ -1,6 +1,6 @@
 /**
  * SlideStore - 幻灯片与演示状态的统一前端存储。
- * 负责：从 API 加载幻灯片、WebSocket 实时同步、维护当前页/顺序/游戏状态。
+ * 负责：从 API 加载幻灯片、WebSocket 实时同步、维护当前页与顺序。
  * 所有页面（slides/editor/controller）共享此模块。
  */
 (function(global) {
@@ -12,14 +12,11 @@
         this.currentSlideId = '';
         this.total = 0;
         this.currentPosition = 1;
-        this.isGameActive = false;
-        this.currentRound = '';
         this.ws = new WsClient();
 
         // 事件回调
         this.onSlidesChange = null;
         this.onCurrentSlideChange = null;
-        this.onGameStateChange = null;
         this.onConnectionStatusChange = null;
         this.onSlideCreated = null;
         this.onSlideUpdated = null;
@@ -37,10 +34,7 @@
             self.slideOrder = data.slide_order || [];
             self.total = data.total || 0;
             self.currentPosition = data.current_position || 1;
-            self.isGameActive = data.is_game_active || false;
-            self.currentRound = data.current_round || '';
             self._notifyCurrentSlideChange();
-            self._notifyGameStateChange();
         });
 
         this.ws.on('goto', function(data) {
@@ -102,17 +96,6 @@
             self._notifyCurrentSlideChange();
         });
 
-        this.ws.on('game_control', function(data) {
-            if (data.action === 'started') {
-                self.isGameActive = true;
-                self.currentRound = data.round_name || '';
-            } else if (data.action === 'ended' || data.action === 'reset') {
-                self.isGameActive = false;
-                self.currentRound = '';
-            }
-            self._notifyGameStateChange();
-        });
-
         this.ws.onStatusChange = function(status) {
             if (self.onConnectionStatusChange) self.onConnectionStatusChange(status);
         };
@@ -159,12 +142,6 @@
     SlideStore.prototype._notifyCurrentSlideChange = function() {
         if (this.onCurrentSlideChange) {
             this.onCurrentSlideChange(this.currentSlideId, this.currentPosition, this.total);
-        }
-    };
-
-    SlideStore.prototype._notifyGameStateChange = function() {
-        if (this.onGameStateChange) {
-            this.onGameStateChange(this.isGameActive, this.currentRound);
         }
     };
 

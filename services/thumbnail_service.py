@@ -226,7 +226,11 @@ class ThumbnailService:
     def _render_fallback(self, slide, output: Path) -> None:
         canvas = Image.new("RGB", THUMBNAIL_SIZE, (241, 245, 249))
         draw = ImageDraw.Draw(canvas)
-        label = {"video": "视频", "image": "图片"}.get(slide.type, "HTML")
+        label = {
+            "video": "视频",
+            "image": "图片",
+            "external": "外部页面",
+        }.get(slide.type, "HTML")
         title = (slide.title or "未命名幻灯片")[:24]
         draw.rounded_rectangle((24, 24, 396, 212), radius=18, fill=(255, 255, 255), outline=(203, 213, 225), width=2)
         draw.text((42, 58), label, font=self._font(24), fill=(34, 197, 94))

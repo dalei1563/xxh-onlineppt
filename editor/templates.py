@@ -30,9 +30,9 @@ TEMPLATES: Dict[str, dict] = {
         "desc": "全屏视频页面",
         "default_title": "视频页",
         "default_chapter": "未分类",
-        "render": lambda content, slide_id: f"""<div class="slide slide-media slide-video" data-slide="{slide_id}">
-    <video id="mediaVideo" playsinline autoplay muted loop>
-        <source src="{_esc(content.get('video_src', '/static/intro_video.mp4'))}" type="video/mp4">
+        "render": lambda content, slide_id: f"""<div class="slide slide-media slide-video" data-slide="{_esc(slide_id)}">
+    <video id="mediaVideo-{_esc(slide_id)}" playsinline autoplay muted>
+        <source src="{_esc(content.get('video_src', '/static/intro_video.mp4'))}" type="{_esc(content.get('video_mime', 'video/mp4'))}">
         您的浏览器不支持视频播放
     </video>
 </div>""",
@@ -44,7 +44,7 @@ TEMPLATES: Dict[str, dict] = {
         "desc": "全屏图片页面",
         "default_title": "图片页",
         "default_chapter": "未分类",
-        "render": lambda content, slide_id: f"""<div class="slide slide-media slide-image" data-slide="{slide_id}">
+        "render": lambda content, slide_id: f"""<div class="slide slide-media slide-image" data-slide="{_esc(slide_id)}">
     <img src="{_esc(content.get('image_src', ''))}" alt="全屏图片">
 </div>""",
     },
@@ -93,53 +93,26 @@ TEMPLATES: Dict[str, dict] = {
 </div>""",
     },
 
-    "ai_chat": {
-        "label": "AI对话",
-        "icon": "🤖",
-        "desc": "智能语音对话页面",
-        "default_title": "AI 对话",
-        "default_chapter": "AI互动",
-        "render": lambda content, slide_id: f"""<link rel="stylesheet" href="/static/css/ai-chat.css">
-<div class="slide template-ai-chat" data-slide="{slide_id}">
-    <div class="ai-chat-container" id="aiChatContainer">
-        <!-- 左侧：视频头像 + 录音按钮 -->
-        <div class="ai-chat-left">
-            <div class="ai-avatar-wrapper">
-                <video class="ai-avatar-video" id="aiAvatarVideo" playsinline muted loop>
-                    <source src="/static/assets/聆听.mp4" type="video/mp4">
-                </video>
-                <div class="ai-avatar-ring" id="aiAvatarRing"></div>
-            </div>
-            <div class="ai-chat-status" id="aiChatStatus">点击开始对话</div>
-            <button class="ai-record-btn" id="aiRecordBtn">
-                <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                    <line x1="12" y1="19" x2="12" y2="23"></line>
-                    <line x1="8" y1="23" x2="16" y2="23"></line>
-                </svg>
-                <span class="record-text">点击说话</span>
-            </button>
-        </div>
-        <!-- 右侧：对话记录 -->
-        <div class="ai-chat-right">
-            <div class="ai-chat-header">
-                <span class="ai-chat-title">💬 AI 对话</span>
-                <button class="ai-clear-btn" id="aiClearBtn">清除记录</button>
-            </div>
-            <div class="ai-chat-messages" id="aiChatMessages">
-                <div class="ai-message ai-message-system">
-                    <div class="ai-message-content">您好！我是GSP学习会的AI主持助手，请问有什么可以帮助您的？🎤</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script src="/static/js/ai-chat.js"></script>
+    "external": {
+        "label": "外部页面",
+        "icon": "🌐",
+        "desc": "通过安全 iframe 接入独立服务或网页",
+        "default_title": "外部页面",
+        "default_chapter": "外部服务",
+        "render": lambda content, slide_id: f"""<div class="slide slide-external" data-slide="{_esc(slide_id)}">
+    <iframe
+        class="external-service-frame"
+        src="{_esc(content.get('external_url', 'about:blank'))}"
+        title="{_esc(content.get('external_title', '外部页面'))}"
+        allow="microphone; autoplay"
+        sandbox="allow-scripts allow-same-origin allow-forms"
+        referrerpolicy="strict-origin-when-cross-origin"
+    ></iframe>
 </div>""",
     },
 }
 
-TEMPLATE_ORDER = ["video", "image", "white", "base", "ai_chat"]
+TEMPLATE_ORDER = ["video", "image", "external", "white", "base"]
 
 
 def _render_body(body: Any) -> str:

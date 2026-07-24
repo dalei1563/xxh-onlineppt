@@ -3,17 +3,25 @@ Slides REST API - 幻灯片元数据与内容接口。
 内容以独立文件存储，REST 负责元数据 CRUD 和文件读取。
 """
 import asyncio
+import json
 import os
 import re
 import uuid
 from pathlib import Path
 from typing import List
+from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy.orm import Session
 
 from db.database import get_db
-from editor.models import SlideInfo, SlideReorder, SlideUpdate, SlideCreate
+from editor.models import (
+    SlideInfo,
+    SlideReorder,
+    SlideUpdate,
+    SlideCreate,
+    SlideVolumeUpdate,
+)
 from db.models import SlideMeta
 from services.slide_service import slide_service
 from services.thumbnail_service import thumbnail_service
@@ -108,8 +116,19 @@ async def create_slide(data: SlideCreate, db: Session = Depends(get_db)):
     if not tmpl:
         raise HTTPException(status_code=400, detail=f"Unknown slide type: {data.type}")
 
-    # 渲染初始 HTML
-    html_content = render_slide(data.type, {}, "{SLIDE_ID}")
+    file_src = None
+    if data.type == "external":
+        parsed = urlparse(data.source_url or "")
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise HTTPException(status_code=400, detail="外部页面必须使用有效的 http/https 地址")
+        file_src = data.source_url
+
+    # 动态媒体/外部页面由统一模板按需渲染；其他类型创建初始 HTML。
+    html_content = (
+        None
+        if data.type in {"video", "image", "external"}
+        else render_slide(data.type, {}, "{SLIDE_ID}")
+    )
 
     result = slide_service.create_slide(
         db,
@@ -117,6 +136,7 @@ async def create_slide(data: SlideCreate, db: Session = Depends(get_db)):
         chapter=data.chapter,
         title=data.title,
         html_content=html_content,
+        file_src=file_src,
     )
     if not result:
         raise HTTPException(status_code=400, detail=f"Cannot create slide type: {data.type}")
@@ -306,14 +326,21 @@ async def render_slide_page(slide_id: str, db: Session = Depends(get_db)):
     - 给根 div 自动补 active class（slides.css 中 .slide { display:none }，需 .active 才显示）
     - 内嵌 postMessage 桥接脚本，用于演示页外层控制视频 mute/play/replay
     """
-    html = slide_service.get_slide_html_by_id(db, slide_id)
+    slide = slide_service.get_slide_orm(db, slide_id)
+    html = slide_service.get_slide_html(slide)
     if not html:
         raise HTTPException(status_code=404, detail=f"未找到幻灯片: {slide_id}")
+    volume_gain = slide_service.get_volume_gain(db, slide_id)
+    is_video_slide = bool(slide and slide.type == "video")
 
-    # 检测幻灯片类型，添加相应的 CSS
     extra_css = ""
-    if "template-ai-chat" in html:
-        extra_css = '<link rel="stylesheet" href="/static/css/ai-chat.css">'
+    external_url = slide_service.get_external_url(slide)
+    external_origin = ""
+    if external_url:
+        parsed_external = urlparse(external_url)
+        external_origin = f"{parsed_external.scheme}://{parsed_external.netloc}"
+    external_origin_js = json.dumps(external_origin).replace("<", "\\u003c")
+    slide_id_js = json.dumps(slide_id).replace("<", "\\u003c")
     # 给根 div 的 class 加上 active（若已存在则不重复）
     # slides.css 中 .slide { display:none }、.slide.active { display:flex }
     slide_fragment = re.sub(
@@ -337,21 +364,139 @@ async def render_slide_page(slide_id: str, db: Session = Depends(get_db)):
 <script>
 (function() {{
   'use strict';
+  var videos = document.querySelectorAll('video');
+  var externalFrame = document.querySelector('.external-service-frame');
+  var externalOrigin = {external_origin_js};
+  var configuredGain = {volume_gain:.4f};
+  var audioContext = null;
+  var gainNode = null;
+  var audioSources = [];
+
+  function ensureAudioGraph() {{
+    if (gainNode || !videos.length) return gainNode;
+    var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    try {{
+      audioContext = new AudioContextClass();
+      gainNode = audioContext.createGain();
+      gainNode.connect(audioContext.destination);
+      videos.forEach(function(v) {{
+        var source = audioContext.createMediaElementSource(v);
+        source.connect(gainNode);
+        audioSources.push(source);
+        // 连接到 Web Audio 后由 GainNode 统一控制倍数。
+        v.volume = 1;
+      }});
+      return gainNode;
+    }} catch (err) {{
+      console.warn('[Video volume] Web Audio initialization failed:', err);
+      return null;
+    }}
+  }}
+
+  function resumeAudioGraph() {{
+    if (audioContext && audioContext.state === 'suspended') {{
+      audioContext.resume().catch(function(){{}});
+    }}
+  }}
+
+  function applyVolumeGain(value) {{
+    var nextGain = Number(value);
+    if (!Number.isFinite(nextGain)) nextGain = 1;
+    configuredGain = Math.max(0, Math.min(20, nextGain));
+
+    // 0~1 倍可先走原生 volume，避免默认 1 倍播放无谓创建 AudioContext。
+    // 超过 1 倍时建立 GainNode，才能实现真正的音量增强。
+    if (!gainNode && configuredGain <= 1) {{
+      videos.forEach(function(v) {{ v.volume = configuredGain; }});
+      return;
+    }}
+    var node = ensureAudioGraph();
+    if (node) {{
+      node.gain.setTargetAtTime(
+        configuredGain,
+        audioContext.currentTime,
+        0.015
+      );
+      resumeAudioGraph();
+    }}
+  }}
+
+  function sendToExternal(type, payload) {{
+    if (!externalFrame || !externalFrame.contentWindow || !externalOrigin) return;
+    externalFrame.contentWindow.postMessage({{
+      source: 'xxh-presentation',
+      version: 1,
+      type: type,
+      payload: payload || {{}}
+    }}, externalOrigin);
+  }}
+
+  if (externalFrame) {{
+    externalFrame.addEventListener('load', function() {{
+      sendToExternal('presentation.enter', {{ slideId: {slide_id_js} }});
+    }});
+  }}
+
+  // 统一新旧视频页行为：进入即播放、点击切换暂停/继续、结束停在最后一帧。
+  // 历史 HTML 里即使带有 loop，也会在这里被关闭。
+  videos.forEach(function(v) {{
+    v.loop = false;
+    v.removeAttribute('loop');
+    v.preload = 'auto';
+    v.setAttribute('preload', 'auto');
+    v.autoplay = true;
+    v.setAttribute('autoplay', '');
+    v.style.cursor = 'pointer';
+    v.addEventListener('click', function(ev) {{
+      ev.preventDefault();
+      ev.stopPropagation();
+      // 播放完成后保持最后一帧；只有离开页面再回来或显式“重播”才从头开始。
+      if (v.ended) return;
+      resumeAudioGraph();
+      if (v.paused) v.play().catch(function(){{}});
+      else v.pause();
+    }});
+    v.addEventListener('ended', function() {{
+      v.pause();
+    }});
+    v.play().catch(function(){{}});
+  }});
+
   // ---- 外层 → iframe 控制桥接 ----
   window.addEventListener('message', function(ev) {{
     var msg = ev.data || {{}};
-    var videos = document.querySelectorAll('video');
+    if (externalFrame && ev.source === externalFrame.contentWindow) {{
+      if (ev.origin !== externalOrigin || msg.source !== 'xxh-ai-voice' || msg.version !== 1) return;
+      parent.postMessage({{
+        type: 'external_service_event',
+        slide: {slide_id_js},
+        event: msg
+      }}, window.location.origin);
+      return;
+    }}
+    if (ev.source !== parent || ev.origin !== window.location.origin) return;
     if (msg.type === 'unmute') {{
+      applyVolumeGain(configuredGain);
+      resumeAudioGraph();
       videos.forEach(function(v) {{ v.muted = false; v.play().catch(function(){{}}); }});
     }} else if (msg.type === 'replay_video') {{
       videos.forEach(function(v) {{ v.currentTime = 0; v.play().catch(function(){{}}); }});
     }} else if (msg.type === 'pause') {{
       videos.forEach(function(v) {{ v.pause(); }});
+      sendToExternal('presentation.pause');
+    }} else if (msg.type === 'resume') {{
+      sendToExternal('presentation.resume');
+    }} else if (msg.type === 'set_volume_gain') {{
+      applyVolumeGain(msg.volumeGain);
     }} else if (msg.type === 'probe') {{
       // 外层连上后询问当前 frame 是否含视频，用于 unmute-overlay 显隐
       ev.source.postMessage({{
         type: 'state',
         hasVideo: !!document.querySelector('.slide video'),
+        isVideoSlide: {str(is_video_slide).lower()},
+        isExternalSlide: !!externalFrame,
+        volumeGain: configuredGain,
         slide: (document.querySelector('.slide') || {{}}).dataset ? document.querySelector('.slide').dataset.slide : null
       }}, ev.origin);
     }}
@@ -362,11 +507,80 @@ async def render_slide_page(slide_id: str, db: Session = Depends(get_db)):
       parent.postMessage({{ type: 'video_ended' }}, '*');
     }}
   }}, true);
+  // iframe 获焦后，按键不会冒泡到外层演示页。捕获阶段转发演示快捷键，
+  // 即使焦点落在 video 控件上，左右翻页和全屏仍保持可用。
+  document.addEventListener('keydown', function(e) {{
+    var target = e.target;
+    var isEditable = target && (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT' ||
+      target.isContentEditable
+    );
+    if (isEditable) return;
+    var presentationKeys = [
+      'ArrowRight', 'ArrowLeft', ' ', 'Backspace',
+      'Home', 'End', 'f', 'F', 'F2'
+    ];
+    if (presentationKeys.indexOf(e.key) === -1 && !(e.ctrlKey && e.key === 'F1')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var keyPayload = {{
+      type: 'presentation_key',
+      key: e.key,
+      ctrlKey: e.ctrlKey,
+      altKey: e.altKey,
+      shiftKey: e.shiftKey
+    }};
+    // 同源时同步调用，保留按键产生的浏览器用户激活状态（全屏 API 需要）；
+    // 若未来改为跨域幻灯片文档，再退回 postMessage 桥接。
+    try {{
+      if (parent.app && typeof parent.app.handlePresentationKey === 'function') {{
+        parent.app.handlePresentationKey(e.key, keyPayload);
+        return;
+      }}
+    }} catch (error) {{}}
+    parent.postMessage(keyPayload, window.location.origin);
+  }}, true);
+  window.addEventListener('beforeunload', function() {{
+    sendToExternal('presentation.leave', {{ slideId: {slide_id_js} }});
+  }});
+  applyVolumeGain(configuredGain);
 }})();
 </script>
 </body>
 </html>"""
     return HTMLResponse(document)
+
+
+@router.get("/{slide_id}/volume")
+async def get_slide_volume(slide_id: str, db: Session = Depends(get_db)):
+    """读取视频页已保存的音量增益倍数。"""
+    slide = slide_service.get_slide_orm(db, slide_id)
+    if not slide:
+        raise HTTPException(status_code=404, detail=f"未找到幻灯片: {slide_id}")
+    if slide.type != "video":
+        raise HTTPException(status_code=400, detail="只有视频幻灯片支持音量设置")
+    return {
+        "slide_id": slide_id,
+        "volume_gain": slide_service.get_volume_gain(db, slide_id),
+    }
+
+
+@router.put("/{slide_id}/volume")
+async def update_slide_volume(
+    slide_id: str,
+    data: SlideVolumeUpdate,
+    db: Session = Depends(get_db),
+):
+    """实时保存视频页音量增益倍数。"""
+    slide = slide_service.get_slide_orm(db, slide_id)
+    if not slide:
+        raise HTTPException(status_code=404, detail=f"未找到幻灯片: {slide_id}")
+    if slide.type != "video":
+        raise HTTPException(status_code=400, detail="只有视频幻灯片支持音量设置")
+    gain = slide_service.set_volume_gain(db, slide_id, data.volume_gain)
+    return {"slide_id": slide_id, "volume_gain": gain}
 
 
 @router.get("/{slide_id}/thumbnail")

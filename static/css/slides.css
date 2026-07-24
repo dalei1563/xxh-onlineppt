@@ -22,23 +22,6 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ==================== PPT 过渡动画 ==================== */
-        @keyframes slideFadeIn {
-            from { opacity: 0; transform: scale(0.98); }
-            to   { opacity: 1; transform: scale(1); }
-        }
-        @keyframes slideFadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to   { opacity: 0; transform: scale(0.98); }
-        }
-        @keyframes slideUpIn {
-            from { opacity: 0; transform: translateY(40px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .slide.active {
-            animation: slideFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
         /* ==================== PPT 风格的阴影和圆角 ==================== */
         .slide {
             box-shadow: 0 0 40px rgba(0,0,0,0.3);
@@ -82,6 +65,20 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        /* ==================== 外部服务页（安全 iframe） ==================== */
+        .slide.slide-external {
+            align-items: stretch;
+            justify-content: stretch;
+            background: #030919;
+        }
+        .external-service-frame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+            background: #030919;
         }
 
         /* ==================== 通用组件 ==================== */
@@ -863,121 +860,6 @@
             height: 100%;
             background: linear-gradient(90deg, #4da6ff, #00d4ff);
             transition: width 0.3s ease;
-        }
-
-        /* ==================== 游戏模式 - 积分看板 ==================== */
-        .game-scoreboard {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            z-index: 9997;
-            min-width: 240px;
-            background: rgba(0, 51, 102, 0.92);
-            backdrop-filter: blur(12px);
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.15);
-            transition: all 0.3s ease;
-        }
-        .game-scoreboard .scoreboard-title {
-            font-size: 13px;
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .game-scoreboard .team-row {
-            display: flex;
-            align-items: center;
-            padding: 6px 0;
-            gap: 8px;
-            font-size: 14px;
-            color: white;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-        .game-scoreboard .team-row:last-child {
-            border-bottom: none;
-        }
-        .game-scoreboard .team-rank {
-            width: 22px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 13px;
-            color: rgba(255,255,255,0.6);
-        }
-        .game-scoreboard .team-name {
-            flex: 1;
-            font-weight: 500;
-        }
-        .game-scoreboard .team-score {
-            font-weight: bold;
-            color: #f1c40f;
-            font-size: 16px;
-            min-width: 40px;
-            text-align: right;
-        }
-        .game-scoreboard .score-change {
-            font-size: 12px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            animation: scorePulse 0.6s ease;
-        }
-        .game-scoreboard .score-change.positive {
-            background: rgba(46, 204, 113, 0.3);
-            color: #2ecc71;
-        }
-        .game-scoreboard .score-change.negative {
-            background: rgba(231, 76, 60, 0.3);
-            color: #e74c3c;
-        }
-        @keyframes scorePulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-            100% { transform: scale(1); }
-        }
-
-        /* ==================== 积分 Toast 动画加强 ==================== */
-        @keyframes toastSlideIn {
-            from { transform: translateX(100px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        .score-toast {
-            animation: toastSlideIn 0.3s ease forwards;
-        }
-
-        /* ==================== 全屏游戏分数居中显示 ==================== */
-        .game-flash {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10002;
-            pointer-events: none;
-            text-align: center;
-            animation: gameFlashAnim 1.5s ease forwards;
-        }
-        .game-flash .team-label {
-            font-size: 72px;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 4px 30px rgba(0,0,0,0.5);
-        }
-        .game-flash .score-delta {
-            font-size: 48px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        .game-flash .score-delta.positive { color: #2ecc71; }
-        .game-flash .score-delta.negative { color: #e74c3c; }
-        @keyframes gameFlashAnim {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-            30% { transform: translate(-50%, -50%) scale(1); }
-            80% { opacity: 1; }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.2); }
         }
 
         /* ==================== 预览模式（用于编辑器缩略图） ==================== */

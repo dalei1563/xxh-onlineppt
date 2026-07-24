@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026年7月线下学习会 - AI主持演示</title>
+    <title>2026年7月线下学习会 - 在线演示</title>
     <link rel="stylesheet" href="/static/editor-style.css">
     <link rel="stylesheet" href="/static/css/slides.css">
-    <link rel="stylesheet" href="/static/css/ai-chat.css">
     <style>
         /* ===== 16:9 固定比例显示模式 =====
            改为 iframe 方案后，#slides-frame 自身按 100%×100% 撑满 .presentation；
@@ -24,6 +23,10 @@
             height: 100vh !important;
         }
         .presentation.mode-16-9 .slide-frame-wrap {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            flex: 0 0 auto;
             width: min(100vw, 177.78vh) !important;  /* 100vh * 16/9 */
             height: min(56.25vw, 100vh) !important;  /* 100vw * 9/16 */
         }
@@ -47,33 +50,162 @@
             height: 100%;
             background: #000;
         }
-        .slide-frame-wrap #__slideFrame {
+        .slide-frame-wrap .slide-frame {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
             border: none;
             display: block;
             background: #000;
+            visibility: hidden;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .slide-frame-wrap .slide-frame.is-active {
+            visibility: visible;
+            pointer-events: auto;
+            z-index: 2;
+        }
+
+        .fullscreen-prompt {
+            position: fixed;
+            inset: 0;
+            z-index: 10030;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.56);
+            backdrop-filter: blur(5px);
+        }
+        .fullscreen-prompt.show { display: flex; }
+        .fullscreen-prompt button {
+            padding: 18px 30px;
+            border: 1px solid rgba(255,255,255,.25);
+            border-radius: 14px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 14px 40px rgba(0,0,0,.38);
+            color: #fff;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* F2 视频音量增强工具栏 */
+        .video-volume-toolbar {
+            position: fixed;
+            left: 50%;
+            bottom: 26px;
+            z-index: 10010;
+            width: min(680px, calc(100vw - 32px));
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 13px 18px;
+            color: #f8fafc;
+            background: rgba(10, 18, 33, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 16px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(14px);
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, calc(100% + 48px));
+            transition: opacity 0.2s ease, transform 0.25s ease, visibility 0.25s;
+        }
+        .video-volume-toolbar.is-open {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, 0);
+        }
+        .video-volume-toolbar .volume-title {
+            flex: 0 0 auto;
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .video-volume-toolbar .volume-slider {
+            min-width: 120px;
+            flex: 1 1 auto;
+            accent-color: #22c55e;
+            cursor: pointer;
+        }
+        .video-volume-toolbar .volume-value {
+            min-width: 62px;
+            color: #86efac;
+            font-size: 18px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+        .video-volume-toolbar .volume-save-state {
+            min-width: 58px;
+            color: #94a3b8;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .video-volume-toolbar .volume-shortcut {
+            color: #64748b;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        @media (max-width: 640px) {
+            .video-volume-toolbar {
+                gap: 10px;
+                padding: 12px 14px;
+            }
+            .video-volume-toolbar .volume-shortcut {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
     <div class="presentation" id="presentation">
         <div class="slide-frame-wrap">
-            <iframe id="__slideFrame" title="当前幻灯片" referrerpolicy="no-referrer" allow="microphone"></iframe>
+            <iframe
+                id="__slideFrameA"
+                class="slide-frame is-active"
+                title="当前幻灯片"
+                referrerpolicy="no-referrer"
+                allow="autoplay; microphone"
+            ></iframe>
+            <iframe
+                id="__slideFrameB"
+                class="slide-frame"
+                title="下一张幻灯片（预加载）"
+                referrerpolicy="no-referrer"
+                allow="autoplay; microphone"
+                aria-hidden="true"
+            ></iframe>
         </div>
     </div>
 
     <!-- 隐藏音频元素用于 TTS 播放 -->
     <audio id="ttsAudio" style="display:none;"></audio>
 
-    <!-- 游戏模式 - 积分看板覆盖层 -->
-    <div class="game-scoreboard" id="gameScoreboard" style="display:none;">
-        <div class="game-scoreboard-inner" id="gameScoreboardInner"></div>
-    </div>
-
     <!-- 进度条 -->
     <div class="progress-bar">
         <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+    </div>
+
+    <!-- F2 呼出的当前视频音量增强工具栏 -->
+    <div class="video-volume-toolbar" id="videoVolumeToolbar" role="dialog" aria-label="视频音量增强">
+        <span class="volume-title">🔊 视频音量</span>
+        <input
+            class="volume-slider"
+            id="videoVolumeSlider"
+            type="range"
+            min="0"
+            max="20"
+            step="0.05"
+            value="1"
+            aria-label="视频音量增益倍数"
+        >
+        <output class="volume-value" id="videoVolumeValue">1.00×</output>
+        <span class="volume-save-state" id="videoVolumeSaveState">已保存</span>
+        <span class="volume-shortcut">F2 关闭</span>
     </div>
 
     <!-- 控制栏 -->
@@ -90,7 +222,7 @@
             <span id="pageTotal">/ 0 页</span>
         </div>
         <div>
-            <button class="nav-btn" onclick="app.toggleFullscreen()">⛶ 全屏</button>
+            <button class="nav-btn" onclick="app.doToggleFullscreen()">⛶ 全屏</button>
         </div>
     </div>
 
@@ -103,6 +235,10 @@
         </div>
     </div>
 
+    <div class="fullscreen-prompt" id="fullscreenPrompt">
+        <button type="button" onclick="app.doToggleFullscreen()">点击进入全屏</button>
+    </div>
+
     <script src="/static/js/ws-client.js"></script>
     <script src="/static/js/slide-store.js"></script>
     <script>
@@ -113,11 +249,18 @@
 
             const app = {
                 store: new SlideStore(),
-                slideFrame: document.getElementById('__slideFrame'),
-                gameScoreboardVisible: false,
-                lastTeamScores: {},
+                slideFrame: document.getElementById('__slideFrameA'),
+                standbyFrame: document.getElementById('__slideFrameB'),
                 _currentFrameSlideId: '',
+                _pendingFrameSlideId: '',
+                _frameLoadToken: 0,
                 _currentFrameHasVideo: false,
+                _currentFrameIsVideoSlide: false,
+                _currentVolumeGain: 1,
+                _volumeSaveTimer: null,
+                _volumeSaveInFlight: false,
+                _pendingVolumeSaves: {},
+                _fullscreenTransition: false,
                 _firstLoad: true,
 
                 init: function() {
@@ -157,12 +300,9 @@
                         self.showConnectionStatus(status === 'connected');
                     };
 
-                    this.store.onGameStateChange = function(isActive, round) {
-                        if (isActive) self.gameScoreboardVisible = true;
-                    };
-
                     this.bindDirectWsEvents();
                     this.bindFrameMessages();
+                    this.bindVolumeToolbar();
                     this.bindKeyboard();
                     this.bindMouseWheel();
                 },
@@ -174,27 +314,27 @@
                     this.store.ws.on('tts_file', function(data) { self.playTtsAudio(data.url); });
                     this.store.ws.on('tts_browser', function(data) { self.speakBrowserTts(data.text); });
                     this.store.ws.on('tts_stop', function() { self.stopTtsAudio(); });
-                    this.store.ws.on('score_update', function(data) { self.showScoreToast(data.team_name, data.score, data.delta); });
-                    this.store.ws.on('score_set', function(data) { self.showScoreToast(data.team_name, data.score, 0); });
-                    this.store.ws.on('score_board', function(data) {
-                        if (self.gameScoreboardVisible) self.showScoreboardPanel(data.teams);
-                        else self.showLeaderboard(data.teams);
-                    });
-                    this.store.ws.on('score_reset', function() { self.hideScoreboardPanel(); });
-                    this.store.ws.on('game_control', function(data) { self.showGameStatus(data); });
-                    this.store.ws.on('ai_answer', function(data) { self.showAIResponse(data.text); });
                     this.store.ws.on('display_mode', function(data) { self.setDisplayMode(data.mode); });
                 },
 
-                // iframe → 外层 消息桥接：state（含 hasVideo，与 /api/slides/<id>/page 端点协议一致）、video_ended
+                // iframe → 外层消息桥接：state 包含 hasVideo；视频结束后留在当前页。
                 bindFrameMessages: function() {
                     const self = this;
                     window.addEventListener('message', function(ev) {
                         // 只接收同源 message（/api/slides 跟本页同源）
-                        if (ev.origin !== window.location.origin) return;
+                        if (
+                            ev.origin !== window.location.origin ||
+                            ev.source !== self.slideFrame.contentWindow
+                        ) return;
                         var msg = ev.data || {};
                         if (msg.type === 'state') {
                             self._currentFrameHasVideo = !!msg.hasVideo;
+                            self._currentFrameIsVideoSlide = !!msg.isVideoSlide;
+                            self._currentVolumeGain = Number.isFinite(Number(msg.volumeGain))
+                                ? Number(msg.volumeGain)
+                                : 1;
+                            self.updateVolumeToolbar();
+                            if (!self._currentFrameIsVideoSlide) self.hideVolumeToolbar();
                             self._checkAudioUnlock();
                             // 用户已经解锁过音频 → 后续切到的任何视频页都应自动取消静音
                             if (window.audioUnlocked && self._currentFrameHasVideo) {
@@ -203,37 +343,136 @@
                                 } catch (e) {}
                             }
                         } else if (msg.type === 'video_ended') {
-                            // 当前页视频结束自动下一页
-                            app.next();
+                            // 不自动翻页；iframe 内视频会停在最后一帧。
+                            console.log('[Video] Playback ended; staying on current slide.');
+                        } else if (msg.type === 'toggle_volume_toolbar') {
+                            self.toggleVolumeToolbar();
+                        } else if (msg.type === 'presentation_key') {
+                            self.handlePresentationKey(msg.key, msg);
                         }
                     });
                 },
 
                 showSlide: function(slideId, force) {
                     if (!slideId) return;
-                    // 切换 iframe src 即重新加载该 slide 的独立文档
-                    if (slideId === this._currentFrameSlideId && !force) return;
-                    this._currentFrameSlideId = slideId;
+
+                    // 当前页仍在显示、下一页还在后台加载时，如果又切回当前页，
+                    // 取消后台任务即可，绝不能让已经过时的页面随后覆盖回来。
+                    if (slideId === this._currentFrameSlideId && !force) {
+                        if (this._pendingFrameSlideId) {
+                            this._frameLoadToken += 1;
+                            this._pendingFrameSlideId = '';
+                            this.standbyFrame.onload = null;
+                            this.standbyFrame.src = 'about:blank';
+                        }
+                        return;
+                    }
+                    if (slideId === this._pendingFrameSlideId && !force) return;
+
                     this._currentFrameHasVideo = false;
+                    this._currentFrameIsVideoSlide = false;
+                    this.hideVolumeToolbar();
+
+                    // 双 iframe 缓冲：旧页继续显示；新页在不可见的备用 iframe 中加载。
+                    // 等新文档（视频页还会等待首帧）准备好后，在同一个渲染周期原子替换，
+                    // 避免直接修改当前 iframe.src 时暴露黑色背景。
+                    var targetFrame = this.standbyFrame;
+                    var loadToken = ++this._frameLoadToken;
+                    var self = this;
+                    this._pendingFrameSlideId = slideId;
+                    targetFrame.onload = function() {
+                        self._waitForFrameReady(targetFrame, slideId, loadToken);
+                    };
                     // 加 ?t= 避免相同 src 时浏览器复用缓存导致 onSlideUpdated 强制刷新不生效
                     var sep = slideId.indexOf('?') >= 0 ? '&' : '?';
-                    this.slideFrame.src = '/api/slides/' + encodeURIComponent(slideId) + '/page' + (force ? sep + 't=' + Date.now() : '');
+                    targetFrame.src = '/api/slides/' + encodeURIComponent(slideId) + '/page' + (force ? sep + 't=' + Date.now() : '');
                 },
 
-                // 演示页 iframe load 完成后，iframe 内的 <script> 不会自动 postMessage 给 parent
-                // （我们保持 page 端 script 是只响应 parent 的 probe），由外层 onload 主动 probe。
-                // iframe src 改变 → onload 触发 → 探测当前 slide 是否含视频 → 决定是否显示 unmute。
-                _attachFrameOnloadProbe: function() {
+                _waitForFrameReady: function(frame, slideId, loadToken) {
                     const self = this;
-                    if (this._frameOnloadBound) return;
-                    this._frameOnloadBound = true;
-                    this.slideFrame.addEventListener('load', function() {
-                        try {
-                            var cw = self.slideFrame.contentWindow;
-                            if (!cw) return;
-                            cw.postMessage({ type: 'probe' }, window.location.origin);
-                        } catch (e) { /* 跨域被阻断时安静忽略 */ }
-                    });
+                    var finished = false;
+                    var fallbackTimer = null;
+
+                    function finish() {
+                        if (finished) return;
+                        finished = true;
+                        if (fallbackTimer) clearTimeout(fallbackTimer);
+                        if (
+                            loadToken !== self._frameLoadToken ||
+                            slideId !== self._pendingFrameSlideId
+                        ) return;
+
+                        // 两个绘制帧确保 CSS、图片以及视频首帧已经提交到合成层。
+                        var frameWindow = frame.contentWindow;
+                        var schedule = frameWindow && frameWindow.requestAnimationFrame
+                            ? frameWindow.requestAnimationFrame.bind(frameWindow)
+                            : window.requestAnimationFrame.bind(window);
+                        schedule(function() {
+                            schedule(function() {
+                                self._commitPreparedFrame(frame, slideId, loadToken);
+                            });
+                        });
+                    }
+
+                    try {
+                        var frameDocument = frame.contentDocument;
+                        var video = frameDocument && frameDocument.querySelector('video');
+                        if (video && video.readyState < 2) {
+                            video.addEventListener('loadeddata', finish, { once: true });
+                            video.addEventListener('canplay', finish, { once: true });
+                            video.addEventListener('error', finish, { once: true });
+                            // 极端网络或解码异常时不能永久卡在旧页。
+                            fallbackTimer = setTimeout(finish, 5000);
+                            return;
+                        }
+                    } catch (e) {
+                        // 页面始终是同源；若未来变为跨域，则退化为 load 后直接替换。
+                    }
+                    finish();
+                },
+
+                _commitPreparedFrame: function(frame, slideId, loadToken) {
+                    if (
+                        loadToken !== this._frameLoadToken ||
+                        slideId !== this._pendingFrameSlideId
+                    ) return;
+
+                    var previousFrame = this.slideFrame;
+                    try {
+                        if (previousFrame.contentWindow) {
+                            previousFrame.contentWindow.postMessage(
+                                { type: 'pause' },
+                                window.location.origin
+                            );
+                        }
+                    } catch (e) {}
+
+                    // 先把已准备好的页面放到上层，再隐藏旧页面；同一任务内完成，不产生中间帧。
+                    frame.classList.add('is-active');
+                    frame.removeAttribute('aria-hidden');
+                    frame.title = '当前幻灯片';
+                    previousFrame.classList.remove('is-active');
+                    previousFrame.setAttribute('aria-hidden', 'true');
+                    previousFrame.title = '下一张幻灯片（预加载）';
+
+                    this.slideFrame = frame;
+                    this.standbyFrame = previousFrame;
+                    this._currentFrameSlideId = slideId;
+                    this._pendingFrameSlideId = '';
+                    frame.onload = null;
+
+                    try {
+                        frame.contentWindow.focus();
+                        frame.contentWindow.postMessage({ type: 'probe' }, window.location.origin);
+                    } catch (e) {}
+
+                    // 页面已经被隐藏后再释放旧文档，停止其中的视频和外部服务。
+                    previousFrame.onload = null;
+                    setTimeout(function() {
+                        if (!previousFrame.classList.contains('is-active')) {
+                            previousFrame.src = 'about:blank';
+                        }
+                    }, 0);
                 },
 
                 updatePageInfo: function() {
@@ -286,13 +525,102 @@
                     const btn = document.getElementById('unmuteBtn');
                     if (btn) btn.addEventListener('click', function(e) { e.stopPropagation(); unlockAudio(); });
 
-                    // 同时把 iframe onload 探测挂上，每次切到含视频页时自动展示 unmute-overlay
-                    this._attachFrameOnloadProbe();
-
                     // 页面加载时立即显示遮罩，让用户一开始就解除静音
                     if (!window.audioUnlocked) {
                         overlay.classList.add('show');
                     }
+                },
+
+                // ---- 当前视频音量增强（F2）----
+                bindVolumeToolbar: function() {
+                    if (this._volumeToolbarBound) return;
+                    this._volumeToolbarBound = true;
+                    const slider = document.getElementById('videoVolumeSlider');
+                    if (!slider) return;
+                    const self = this;
+                    slider.addEventListener('input', function() {
+                        var gain = Number(slider.value);
+                        self._currentVolumeGain = gain;
+                        self.updateVolumeToolbar('正在保存…');
+                        try {
+                            var cw = self.slideFrame.contentWindow;
+                            if (cw) {
+                                cw.postMessage({
+                                    type: 'set_volume_gain',
+                                    volumeGain: gain
+                                }, window.location.origin);
+                            }
+                        } catch (e) {}
+                        self.queueVolumeSave(self._currentFrameSlideId, gain);
+                    });
+                },
+
+                updateVolumeToolbar: function(saveState) {
+                    const slider = document.getElementById('videoVolumeSlider');
+                    const value = document.getElementById('videoVolumeValue');
+                    const state = document.getElementById('videoVolumeSaveState');
+                    if (slider) slider.value = String(this._currentVolumeGain);
+                    if (value) value.textContent = this._currentVolumeGain.toFixed(2) + '×';
+                    if (state && saveState) state.textContent = saveState;
+                    else if (state && !this._volumeSaveInFlight) state.textContent = '已保存';
+                },
+
+                toggleVolumeToolbar: function() {
+                    if (!this._currentFrameIsVideoSlide) return;
+                    const toolbar = document.getElementById('videoVolumeToolbar');
+                    if (!toolbar) return;
+                    toolbar.classList.toggle('is-open');
+                    if (toolbar.classList.contains('is-open')) {
+                        this.updateVolumeToolbar();
+                    }
+                },
+
+                hideVolumeToolbar: function() {
+                    const toolbar = document.getElementById('videoVolumeToolbar');
+                    if (toolbar) toolbar.classList.remove('is-open');
+                },
+
+                queueVolumeSave: function(slideId, gain) {
+                    if (!slideId) return;
+                    this._pendingVolumeSaves[slideId] = gain;
+                    clearTimeout(this._volumeSaveTimer);
+                    const self = this;
+                    this._volumeSaveTimer = setTimeout(function() {
+                        self.flushVolumeSaves();
+                    }, 180);
+                },
+
+                flushVolumeSaves: function() {
+                    if (this._volumeSaveInFlight) return;
+                    const slideIds = Object.keys(this._pendingVolumeSaves);
+                    if (!slideIds.length) return;
+                    const slideId = slideIds[0];
+                    const gain = this._pendingVolumeSaves[slideId];
+                    delete this._pendingVolumeSaves[slideId];
+                    this._volumeSaveInFlight = true;
+                    const self = this;
+                    fetch('/api/slides/' + encodeURIComponent(slideId) + '/volume', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ volume_gain: gain })
+                    }).then(function(response) {
+                        if (!response.ok) throw new Error('保存失败');
+                        if (self._currentFrameSlideId === slideId) {
+                            self.updateVolumeToolbar('已保存');
+                        }
+                    }).catch(function() {
+                        if (self._currentFrameSlideId === slideId) {
+                            self.updateVolumeToolbar('保存失败');
+                        }
+                    }).finally(function() {
+                        self._volumeSaveInFlight = false;
+                        if (Object.keys(self._pendingVolumeSaves).length) {
+                            clearTimeout(self._volumeSaveTimer);
+                            self._volumeSaveTimer = setTimeout(function() {
+                                self.flushVolumeSaves();
+                            }, 500);
+                        }
+                    });
                 },
 
                 // ---- 导航与控制 ----
@@ -307,11 +635,33 @@
                 replayVideo: function() { this.store.replayVideo(); },
                 skipVideo: function() { this.next(); this.sync(); },
 
-                doToggleFullscreen: function() {
-                    if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen().catch(function(){});
-                    } else {
-                        document.exitFullscreen().catch(function(){});
+                getFullscreenDocument: function() {
+                    if (document.fullscreenElement) return document;
+                    try {
+                        const frameDocument = this.slideFrame.contentDocument;
+                        if (frameDocument && frameDocument.fullscreenElement) return frameDocument;
+                    } catch (e) {}
+                    return null;
+                },
+
+                doToggleFullscreen: async function() {
+                    if (this._fullscreenTransition) return;
+                    this._fullscreenTransition = true;
+                    try {
+                        const fullscreenDocument = this.getFullscreenDocument();
+                        if (fullscreenDocument) {
+                            await fullscreenDocument.exitFullscreen();
+                        } else {
+                            await document.documentElement.requestFullscreen();
+                        }
+                    } catch (error) {
+                        console.warn('[Fullscreen] Toggle failed:', error);
+                        document.getElementById('fullscreenPrompt').classList.add('show');
+                    } finally {
+                        if (document.fullscreenElement) {
+                            document.getElementById('fullscreenPrompt').classList.remove('show');
+                        }
+                        this._fullscreenTransition = false;
                     }
                 },
 
@@ -363,130 +713,53 @@
                     window.speechSynthesis.speak(utterance);
                 },
 
-                // ---- 积分/游戏 ----
-                showScoreToast: function(teamName, score, delta) {
-                    this.showGameFlash(teamName, delta);
-                    const toast = document.createElement('div');
-                    toast.className = 'score-toast';
-                    toast.style.cssText = 'position:fixed;bottom:80px;right:20px;background:rgba(0,51,102,0.95);color:white;padding:16px 24px;border-radius:12px;font-size:20px;font-weight:bold;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:toastSlideIn 0.3s ease forwards;';
-                    const sign = delta > 0 ? '+' : '';
-                    toast.innerHTML = teamName + ' <span style="color:' + (delta > 0 ? '#2ecc71' : '#e74c3c') + '">' + sign + delta + '</span> → <span style="color:#f1c40f">' + score + '分</span>';
-                    document.body.appendChild(toast);
-                    setTimeout(function() {
-                        toast.style.transition = 'all 0.3s ease';
-                        toast.style.opacity = '0';
-                        toast.style.transform = 'translateY(20px)';
-                        setTimeout(function() { toast.remove(); }, 300);
-                    }, 2500);
-                    this.updateGameScoreboard();
-                },
-
-                showGameFlash: function(teamName, delta) {
-                    const flash = document.createElement('div');
-                    flash.className = 'game-flash';
-                    const sign = delta > 0 ? '+' : '';
-                    flash.innerHTML = '<div class="team-label">' + teamName + '</div><div class="score-delta ' + (delta > 0 ? 'positive' : 'negative') + '">' + sign + delta + '</div>';
-                    document.body.appendChild(flash);
-                    setTimeout(function() { flash.remove(); }, 1600);
-                },
-
-                updateGameScoreboard: function() {
-                    if (!this.gameScoreboardVisible) return;
-                    this.store.send({ type: 'score_get' });
-                },
-
-                showScoreboardPanel: function(teams) {
-                    this.gameScoreboardVisible = true;
-                    const el = document.getElementById('gameScoreboard');
-                    const inner = document.getElementById('gameScoreboardInner');
-                    if (!el || !inner || !teams) return;
-                    el.style.display = 'block';
-                    const sorted = teams.slice().sort(function(a, b) { return b.score - a.score; });
-                    inner.innerHTML = '<div class="scoreboard-title">🏆 实时排行榜</div>' +
-                        sorted.map(function(t) {
-                            const prev = app.lastTeamScores[t.team_name] || 0;
-                            const change = t.score - prev;
-                            app.lastTeamScores[t.team_name] = t.score;
-                            const changeHtml = change !== 0 ? '<span class="score-change ' + (change > 0 ? 'positive' : 'negative') + '">' + (change > 0 ? '+' : '') + change + '</span>' : '';
-                            return '<div class="team-row"><span class="team-rank">' + (sorted.indexOf(t) + 1) + '</span><span class="team-name">' + t.team_name + '</span>' + changeHtml + '<span class="team-score">' + t.score + '</span></div>';
-                        }).join('');
-                },
-
-                hideScoreboardPanel: function() {
-                    this.gameScoreboardVisible = false;
-                    const el = document.getElementById('gameScoreboard');
-                    if (el) el.style.display = 'none';
-                },
-
-                showLeaderboard: function(teams) {
-                    this.showScoreboardPanel(teams);
-                },
-
-                hideLeaderboard: function() {
-                    this.hideScoreboardPanel();
-                },
-
-                showGameStatus: function(data) {
-                    const toast = document.createElement('div');
-                    toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:white;padding:30px 50px;border-radius:16px;font-size:28px;font-weight:bold;z-index:9999;text-align:center;animation:fadeInOut 2.5s ease;';
-                    if (data.action === 'started') {
-                        toast.innerHTML = '🎮 游戏环节开始<br><span style="font-size:18px;opacity:0.8;">' + (data.round_name || '') + '</span>';
-                        this.gameScoreboardVisible = true;
-                        document.getElementById('gameScoreboard').style.display = 'block';
-                    } else if (data.action === 'ended') {
-                        toast.innerHTML = '⏹ 游戏环节已结束';
-                    } else if (data.action === 'reset') {
-                        toast.innerHTML = '🔄 游戏已重置';
-                        this.hideScoreboardPanel();
-                    }
-                    document.body.appendChild(toast);
-                    setTimeout(function() { toast.remove(); }, 2800);
-                },
-
-                // ---- AI ----
-                showAIResponse: function(text) {
-                    if (!text) return;
-                    const aiOverlay = document.createElement('div');
-                    aiOverlay.style.cssText = 'position:fixed;top:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:white;padding:16px 28px;border-radius:16px;font-size:22px;font-weight:bold;z-index:10003;text-align:center;max-width:80%;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);animation:slideUpIn 0.4s ease;box-shadow:0 8px 32px rgba(0,0,0,0.5);line-height:1.6;';
-                    aiOverlay.textContent = '🤖 ' + text;
-                    document.body.appendChild(aiOverlay);
-                    setTimeout(function() {
-                        aiOverlay.style.transition = 'all 0.5s ease';
-                        aiOverlay.style.opacity = '0';
-                        aiOverlay.style.transform = 'translateX(-50%) translateY(-30px)';
-                        setTimeout(function() { aiOverlay.remove(); }, 500);
-                    }, 8000);
-                },
-
                 // ---- 输入事件 ----
+                handlePresentationKey: function(key, options) {
+                    const opts = options || {};
+                    if (key === 'F2') {
+                        this.toggleVolumeToolbar();
+                        return true;
+                    }
+                    if (opts.ctrlKey && key === 'F1') {
+                        document.getElementById('controlBar').classList.toggle('visible');
+                        document.querySelector('.progress-bar').classList.toggle('visible');
+                        return true;
+                    }
+                    switch(key) {
+                        case 'ArrowRight':
+                        case ' ':
+                            this.next();
+                            return true;
+                        case 'ArrowLeft':
+                        case 'Backspace':
+                            this.prev();
+                            return true;
+                        case 'Home':
+                            this.first();
+                            return true;
+                        case 'End':
+                            this.last();
+                            return true;
+                        case 'f':
+                        case 'F':
+                            this.doToggleFullscreen();
+                            return true;
+                        case 'Escape':
+                            if (this.store.currentSlideId === this.store.slideOrder[0]) {
+                                this.skipVideo();
+                                return true;
+                            }
+                            return false;
+                        default:
+                            return false;
+                    }
+                },
+
                 bindKeyboard: function() {
                     document.addEventListener('keydown', function(e) {
                         if (e.target.tagName === 'INPUT') return;
-
-                        if (e.ctrlKey && e.key === 'F1') {
+                        if (app.handlePresentationKey(e.key, { ctrlKey: e.ctrlKey })) {
                             e.preventDefault();
-                            document.getElementById('controlBar').classList.toggle('visible');
-                            document.querySelector('.progress-bar').classList.toggle('visible');
-                            return;
-                        }
-
-                        switch(e.key) {
-                            case 'ArrowRight':
-                            case ' ':
-                                e.preventDefault(); app.next(); break;
-                            case 'ArrowLeft':
-                            case 'Backspace':
-                                e.preventDefault(); app.prev(); break;
-                            case 'Home':
-                                e.preventDefault(); app.first(); break;
-                            case 'End':
-                                e.preventDefault(); app.last(); break;
-                            case 'f':
-                            case 'F':
-                                e.preventDefault(); app.toggleFullscreen(); break;
-                            case 'Escape':
-                                if (app.store.currentSlideId === app.store.slideOrder[0]) app.skipVideo();
-                                break;
                         }
                     });
                 },

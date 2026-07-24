@@ -1,28 +1,6 @@
-"""
-SQLAlchemy ORM models for game scoring and slide management.
-"""
-from sqlalchemy import Column, Integer, String, Text, DateTime, func
+"""SQLAlchemy ORM models for slide management."""
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, func
 from db.database import Base
-
-
-class TeamScore(Base):
-    """团队积分记录"""
-    __tablename__ = "team_scores"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    team_name = Column(String(50), nullable=False, unique=True, comment="组名")
-    score = Column(Integer, nullable=False, default=0, comment="当前积分")
-    display_order = Column(Integer, nullable=False, default=0, comment="显示排序")
-    created_at = Column(DateTime, server_default=func.now(), comment="创建时间")
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), comment="更新时间")
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "team_name": self.team_name,
-            "score": self.score,
-            "display_order": self.display_order,
-        }
 
 
 class SlideMeta(Base):
@@ -49,3 +27,16 @@ class SlideMeta(Base):
             "display_order": self.display_order,
             "file_path": self.file_path,
         }
+
+
+class SlideAudioSetting(Base):
+    """视频幻灯片的播放音量设置。
+
+    独立成表可以兼容已有数据库，无需重建 slides_meta。
+    volume_gain 是 Web Audio 增益倍数，1.0 表示原始音量。
+    """
+    __tablename__ = "slide_audio_settings"
+
+    slide_id = Column(String(50), primary_key=True, comment="对应 slides_meta.slide_id")
+    volume_gain = Column(Float, nullable=False, default=1.0, comment="视频音量增益倍数")
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

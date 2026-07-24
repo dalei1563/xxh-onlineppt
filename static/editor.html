@@ -729,6 +729,10 @@
                 <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
                 插入视频
             </button>
+            <button class="btn btn-sm btn-secondary" onclick="createExternalSlide()">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18"/><path d="M12 3a15 15 0 0 0 0 18"/></svg>
+                插入外部页面
+            </button>
             <button class="btn btn-sm btn-outline-accent" onclick="createChapter()">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 新建章节
@@ -772,10 +776,9 @@
             var sortableInstances = [];
             var chapterSortableInstance = null;
             var selectedChapter = '';
-            var toastTimer = null;
 
             var TYPE_LABELS = {
-                'video': '🎬 视频', 'image': '🖼️ 图片', 'white': '📄 HTML',
+                'video': '🎬 视频', 'image': '🖼️ 图片', 'external': '🌐 外部页面', 'white': '📄 HTML',
             };
 
             var store = new SlideStore();
@@ -1339,21 +1342,57 @@
                 }
             }
 
+            async function createExternalSlide() {
+                var url = prompt('请输入外部服务或网页地址（http/https）：', 'http://127.0.0.1:8100/');
+                if (!url) return;
+                var title = prompt('请输入幻灯片标题：', '外部页面') || '外部页面';
+                try {
+                    var response = await fetch('/api/slides/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'external',
+                            chapter: selectedChapter || '外部服务',
+                            title: title,
+                            source_url: url.trim()
+                        })
+                    });
+                    if (!response.ok) {
+                        var error = await response.json().catch(function() { return {}; });
+                        throw new Error(error.detail || '创建失败');
+                    }
+                    await refreshAndRender();
+                    showToast('外部页面已添加', 'success');
+                } catch (error) {
+                    showToast('外部页面创建失败: ' + error.message, 'error');
+                }
+            }
+
             // ---- Toast ----
             function showToast(msg, type) {
                 var container = document.getElementById('toastContainer');
                 var toast = document.createElement('div');
                 toast.className = 'toast ' + (type || '');
                 toast.textContent = msg;
+                toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+                toast.title = '点击关闭';
                 container.appendChild(toast);
                 requestAnimationFrame(function() {
                     toast.classList.add('show');
                 });
-                clearTimeout(toastTimer);
-                toastTimer = setTimeout(function() {
+
+                var removed = false;
+                function dismiss() {
+                    if (removed) return;
+                    removed = true;
+                    clearTimeout(dismissTimer);
                     toast.classList.remove('show');
                     setTimeout(function() { toast.remove(); }, 300);
-                }, 2500);
+                }
+
+                // 每条提示独立计时，后续 Toast 不会取消当前提示的关闭任务。
+                var dismissTimer = setTimeout(dismiss, 2500);
+                toast.addEventListener('click', dismiss);
             }
 
             // ---- Utility ----
@@ -1370,6 +1409,7 @@
             // Make functions globally accessible
             window.triggerUpload = triggerUpload;
             window.handleFileUpload = handleFileUpload;
+            window.createExternalSlide = createExternalSlide;
             window.deleteSlide = deleteSlide;
             window.editChapter = editChapter;
             window.deleteChapter = deleteChapter;

@@ -30,7 +30,7 @@ class ConnectionManager:
         self._connections: Dict[int, WebSocket] = {}
         # 真正唯一且不复用的客户端 ID
         self._next_client_id = itertools.count(1)
-        # 客户端断开时的清理回调，供 ai_handler 等带状态模块注册
+        # 客户端断开时的领域清理回调
         self._disconnect_callbacks: list[Callable[[int], None]] = []
         register_all_disconnect_handlers(self)
 
@@ -59,8 +59,6 @@ class ConnectionManager:
                 slide_order=presentation_state.slide_order,
                 total=presentation_state.total_slides,
                 current_position=presentation_state.current_position,
-                is_game_active=presentation_state.is_game_active,
-                current_round=presentation_state.current_round,
             ).model_dump()
         )
 
@@ -74,7 +72,7 @@ class ConnectionManager:
     async def disconnect(self, client_id: int):
         """断开客户端连接"""
         self._connections.pop(client_id, None)
-        # 触发各模块注册的清理回调（如释放 AI 对话历史）
+        # 触发各模块注册的清理回调
         for cb in self._disconnect_callbacks:
             try:
                 cb(client_id)

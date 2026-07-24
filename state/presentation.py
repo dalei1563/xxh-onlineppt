@@ -1,6 +1,6 @@
 """
 Presentation state - 演示运行时权威状态。
-维护当前页码、幻灯片顺序、游戏状态等所有客户端共享的运行时信息。
+维护当前页码、幻灯片顺序等所有客户端共享的运行时信息。
 """
 from typing import List, Optional
 
@@ -11,8 +11,6 @@ class PresentationState:
     def __init__(self):
         self._slide_order: List[str] = []
         self._current_slide_id: str = "1"
-        self._is_game_active: bool = False
-        self._current_round: str = ""
 
     # ---- 幻灯片顺序 ----
 
@@ -87,27 +85,6 @@ class PresentationState:
             self._current_slide_id = self._slide_order[-1]
         return self._current_slide_id
 
-    # ---- 游戏状态 ----
-
-    @property
-    def is_game_active(self) -> bool:
-        return self._is_game_active
-
-    @property
-    def current_round(self) -> str:
-        return self._current_round
-
-    def start_game(self, round_name: str = ""):
-        self._is_game_active = True
-        self._current_round = round_name
-
-    def end_game(self):
-        self._is_game_active = False
-        self._current_round = ""
-
-    def reset_game(self):
-        self.end_game()
-
     # ---- 序列化 ----
 
     def to_dict(self) -> dict:
@@ -116,8 +93,6 @@ class PresentationState:
             "slide_order": self._slide_order,
             "total": self.total_slides,
             "current_position": self.current_position,
-            "is_game_active": self._is_game_active,
-            "current_round": self._current_round,
         }
 
 

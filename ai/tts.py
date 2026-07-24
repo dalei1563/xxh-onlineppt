@@ -120,20 +120,5 @@ class TTSManager:
             print(f"[TTS] Exception: {e}")
             return None
 
-    async def generate_score_announcement(self, team_name: str, delta: int, new_score: int) -> Optional[str]:
-        """生成积分变化播报语音"""
-        action = "加" if delta > 0 else "减"
-        abs_delta = abs(delta)
-        if abs_delta == 0:
-            text = f"{team_name}当前{new_score}分"
-        else:
-            text = f"{team_name}{action}{abs_delta}分，当前{new_score}分"
-        return await self.synthesize(text, voice="female")
-
-    async def generate_ai_voice(self, text: str) -> Optional[str]:
-        """生成 AI 对话回复语音"""
-        return await self.synthesize(text, voice="female")
-
-
 # 全局单例
 tts_manager = TTSManager()

@@ -29,7 +29,7 @@ async def _generate_and_broadcast(manager: Any, text: str, voice: str = ""):
 async def speak(manager: Any, text: str, voice: str = ""):
     """
     TTS 公共入口：触发异步生成并广播 TtsFileMsg / TtsBrowserMsg。
-    供积分自动播报、AI 回复等"系统侧"调用使用，避免重复实现。
+    供控制台及其他系统侧调用使用，避免重复实现。
     """
     if not text:
         return
@@ -51,7 +51,7 @@ async def handle_tts_stop(manager: Any, data: dict, client_id: int):
 
 
 async def handle_tts_request(manager: Any, data: dict, client_id: int):
-    """内部触发的 TTS 请求（如积分变化自动播报）"""
+    """内部触发的 TTS 请求。"""
     text = data.get("text", "")
     if text:
         print(f"[TTS] Internal TTS request: {text[:50]}...")

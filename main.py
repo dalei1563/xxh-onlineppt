@@ -1,10 +1,10 @@
 """
-GSP 学习会 AI 主持演示系统 - 主入口
+GSP 学习会在线演示系统 - 主入口
 
 FastAPI 服务器，提供：
 - HTTP 静态文件服务（slides.html, controller.html, editor.html）
-- REST API（幻灯片、积分、游戏控制）
-- WebSocket 实时通信（翻页控制、幻灯片同步、游戏积分、TTS 播报等）
+- REST API（幻灯片管理）
+- WebSocket 实时通信（翻页控制、幻灯片同步、TTS 播报等）
 """
 import os
 import sys
@@ -26,13 +26,12 @@ load_dotenv()
 
 from db.database import init_db, SessionLocal
 from services.slide_service import slide_service
-from services.game_service import game_service
 from services.thumbnail_service import thumbnail_service
 from state.presentation import presentation_state
 from ws.handler import manager as ws_manager
 
 # API 路由
-from api import slides, teams, game
+from api import slides
 from editor.templates import get_all_templates_for_ui
 
 
@@ -46,12 +45,19 @@ async def lifespan(app: FastAPI):
     thumbnail_task = None
     db = SessionLocal()
     try:
-        game_service.init_teams(db)
-        teams_list = game_service.get_all_teams(db)
-        print(f"[Game] Teams initialized: {[t.team_name for t in teams_list]}")
-
         slide_service.seed_slides(db)
         print("[Editor] Slides metadata seeded")
+
+        migrated_videos = slide_service.migrate_legacy_video_slides(db)
+        if migrated_videos:
+            print(f"[Migration] Unified {migrated_videos} legacy video slides")
+
+        migrated_ai_slides = slide_service.migrate_ai_chat_slides(db)
+        if migrated_ai_slides:
+            print(
+                f"[Migration] Converted {migrated_ai_slides} embedded AI slides "
+                "to external service frames"
+            )
 
         # 初始化演示权威状态
         order = slide_service.get_slide_order(db)
@@ -73,7 +79,7 @@ async def lifespan(app: FastAPI):
         db.close()
 
     print("=" * 50)
-    print("GSP 学习会 AI 主持演示系统 v3")
+    print("GSP 学习会在线演示系统 v3")
     print("=" * 50)
     print(f"Slides:     http://localhost:8000/slides.html")
     print(f"Controller: http://localhost:8000/controller.html")
@@ -93,9 +99,9 @@ async def lifespan(app: FastAPI):
 
 # FastAPI 应用
 app = FastAPI(
-    title="GSP 学习会 AI 主持演示系统",
+    title="GSP 学习会在线演示系统",
     version="3.0.0",
-    description="线下学习会交互式演示系统，支持远程控制、在线编辑、游戏积分、TTS 语音播报",
+    description="线下学习会交互式演示系统，支持远程控制、在线编辑、外部服务页与语音播报",
     lifespan=lifespan,
 )
 
@@ -151,8 +157,6 @@ async def get_templates():
     return get_all_templates_for_ui()
 
 app.include_router(slides.router)
-app.include_router(teams.router)
-app.include_router(game.router)
 
 
 # ---- WebSocket 路由 ----
